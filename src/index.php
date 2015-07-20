@@ -6,6 +6,9 @@ namespace {
    - {theme}.css   : Farb- und teilweise Positionseinstellungen
 */
 
+    /*
+    ** load configuration
+    */
     require_once 'config.php';
 
     $_VERSION = "3.0.0α1";
@@ -37,13 +40,33 @@ namespace {
             printf('<div class="alert alert-%s">%s</div>', $type, $msg);
     }
 
+    function error_message($msg)
+    {
+        message($msg, 'danger');
+    }
+
+    /*
+    ** compatibily layer for php 5.5 password-hashing-functions
+    */
     require_once 'include/password.php';
+
+    /*
+    ** base class (with autoloader) for the used library
+    ** and the application classes
+    */
     require_once 'include/Tiger/Base.php';
     $GalClash = new \Tiger\AutoLoader(\Tiger\AutoLoader::APPLICATION, 'GalClash');
 
     error_reporting(E_ALL|E_STRICT);
+
+    /*
+    ** storage for error messages which occured before sending the page-header
+    */
     $early_errors = array();
 
+    /*
+    ** connect to the database
+    */
     try {
         $db = new \GalClash\GCDB(DB_ENGINE, DB_HOST, DB_PORT, DB_NAME, DB_CHARSET, DB_USER, DB_PWD);
     }
@@ -51,6 +74,9 @@ namespace {
         $early_errors[] = $e;
     }
 
+    /*
+    ** initialize the session
+    */
     try {
         $session = new GalClash\GCSession();
         $session->open();
@@ -59,54 +85,6 @@ namespace {
         $early_errors[] = $e;
     }
 
-        function _strlen($binary_string) {
-            if (function_exists('mb_strlen')) {
-                return mb_strlen($binary_string, '8bit');
-            }
-            return strlen($binary_string);
-        }
-
-function error_message($msg)
-{
-    message($msg, 'danger');
-}
-
-function is_admin()
-{
-    global $session;
-    
-    return $session->admin;
-}
-
-function is_leiter()
-{
-    global $session;
-
-    return $session->leiter;
-}
-
-function put_login_form()
-{
-?>
-    <p id="touch-screen">Touchscreen gefunden :-)<br />Bitte Tiger Bescheid geben, falls diese Meldung länger als 1d sichtbar ist!</p>
-    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-        <fieldset>
-            <legend>Login</legend>
-            <table>
-                <tr>
-                    <td><label for="login_user">Benutzer Name:</label></td>
-                    <td><input name="user" id="login_user" type="text" size="20" maxlength="20" /></td>
-                </tr>
-                <tr>
-                    <td><label for="login_pwd">Passwort</label></td>
-                    <td><input name="pwd" id="login_pwd" type="password" size="20" maxlength="20" /></td>
-                </tr>
-            </table>
-            <input type="submit" value="Login" />
-        </fieldset>
-    </form>
-<?php
-}
 /*
 function start($errors, $db, &$session)
 {
@@ -469,7 +447,7 @@ function put_admin_forms()
         </fieldset>
     </form>
 <?php
-    if(is_leiter())
+    if($session->is_leiter())
     {
 ?>
     <table>
@@ -741,14 +719,15 @@ function put_konto_forms($disable)
 
 function put_add_form($spieler, $allianz)
 {
+    global $session;
 ?>
     <div id="col_add_form">
         <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
             <fieldset>
-                <legend>Kolonie hinzufügen<?php print(is_admin() ? " / löschen" : ""); ?></legend>
+                <legend>Kolonie hinzufügen<?php print($session->is_admin() ? " / löschen" : ""); ?></legend>
                 Bitte auf korrekte Schreibweise achten: <code>BattleSqua</code> und <code>Battle5qua</code>
                 sind zwei unterschiedliche Namen!
-                <?php print(is_admin() ? "<br />Zum Löschen bitte alle Felder ausfüllen und auf Groß-/Kleinschreibung achten!" : ""); ?>
+                <?php print($session->is_admin() ? "<br />Zum Löschen bitte alle Felder ausfüllen und auf Groß-/Kleinschreibung achten!" : ""); ?>
                 <table border="0" cellpadding="0" cellspacing="4">
                     <tr>
                         <td align="right">Spieler:</td>
@@ -775,7 +754,7 @@ function put_add_form($spieler, $allianz)
                         </table>
                     </tr>
 <?php
-    if(is_admin())
+    if($session->is_admin())
     {
 ?>
                     <tr>
@@ -1939,7 +1918,7 @@ function allianz_aenderung()
 
 $themes = new \GalClash\GCThemes();
 $themes->set_theme();
-$session->login($early_errors, $db);
+$login_ret = $session->login($early_errors, $db);
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -1985,7 +1964,7 @@ debug_output();
 <?php
     if($session->is_logged_in())
     {
-        if(is_admin() && isset($_POST["admin"]))
+        if($session->is_admin() && isset($_POST["admin"]))
             print("<h2>ADMINMODE</h2>");
         else if(isset($_POST["konto"]) || $session->c_pwd)
             print("<h2>Kontensteuerung</h2>");
@@ -2006,7 +1985,7 @@ debug_output();
 <?php
     if($session->is_logged_in())
     {
-        if(is_admin())
+        if($session->is_admin())
         {
             if(isset($_POST["admin"]))
                 put_admin_button(TRUE);
@@ -2126,14 +2105,10 @@ if($session->is_logged_in())
 }
 else
 {
-    /*
-    if($start == 5)
+    if(is_null($login_ret))
         error_message("Falscher Benutzername oder falsches Passwort!");
-    else
-        error_message("Bitte später nochmal versuchen...(" . $start . ')');
-        */
 
-    put_login_form();
+    $session->login_form();
 }
 ?>
             </div>

@@ -1,0 +1,8 @@
+This is an experimental library of more or less useful php-classes.
+
+usage is by simply requiering the base class
+(e.g. when in subdirectory of scipt-path):
+
+    require_once "include/Tiger/Base.php";
+
+and instantiating the needed classes…

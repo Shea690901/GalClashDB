@@ -1,5 +1,18 @@
 <?php
 namespace Tiger {
+    /*
+    ** base class
+    **
+    ** extends the possibilities of not declared public class variables
+    ** via __set, __get, …
+    ** with the possibility of restricting the possible keys.
+    **
+    ** this allows for simpler extending interfaces by using the
+    ** magic-interface while still having the possibility of error-messages
+    ** when using disallowed (think: typo) member-variables.
+    ** at the §ame time this class allows to iterate through it's
+    ** (pseudo) member-varables
+    */
     class Base implements \iterator {
         private $data;
         private $valid_keys;
@@ -95,6 +108,24 @@ namespace Tiger {
         }
     }
 
+    /*
+    ** autoloader class
+    **
+    ** this class implements an easy to use autoloader for classes used
+    ** before they are defined …
+    ** application type pathes are searched in reverse definition order before
+    ** library type paths, which are searched in definition order
+    ** simply destroying an autoloader-object removes it's path from the
+    ** search-path
+    **
+    ** all applications and libraries are assumed to reside in their own
+    ** subdirectories under either 
+    ** $_SERVER['DOCUMENT_ROOT'] . 'include/'
+    ** or
+    ** dirname($_SERVER['SCRIPT_FILENAME']) . '/include/'
+    ** where the used directory name corresponds with the namespace used by
+    ** either application or library
+    */
     class AutoLoader {
         const LIBRARY     = 0;
         const APPLICATION = 1;
@@ -157,6 +188,9 @@ namespace Tiger {
         }
     }
 
+    /*
+    ** error-handler which converts runtime errors into exceptions
+    */
     function exception_error_handler($errno, $errstr, $errfile, $errline)
     {
         printf("<pre>%016b %016b\n%s\n%s\n%d</pre>", $errno, error_reporting(), $errstr, $errfile, $errline);
@@ -167,8 +201,11 @@ namespace Tiger {
         }
         throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
     }
-    set_error_handler("\\Tiger\\exception_error_handler");
 
+    /*
+    ** install error-handler and autoloader for this library
+    */
+    set_error_handler("\\Tiger\\exception_error_handler");
     $TigerAutoLoader = new \Tiger\AutoLoader(AutoLoader::LIBRARY, 'Tiger');
 }
 

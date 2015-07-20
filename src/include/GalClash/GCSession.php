@@ -56,7 +56,7 @@ namespace GalClash {
                     printf('<pre>%s</pre>', $e->getMessage());
                     return FALSE;
                 }
-                if(($user_info['blocked'] == '-') && ($recrypt = $this->check_password($user_info['pwd'], $_POST["pwd"])))
+                if($user_info && ($user_info['blocked'] == '-') && ($recrypt = $this->check_password($user_info['pwd'], $_POST["pwd"])))
                 {
                     if($recrypt == 2)
                         $db->update_passwd($user, $t = password_hash($_POST['pwd'], PASSWORD_DEFAULT));
@@ -82,6 +82,16 @@ namespace GalClash {
             return $this->logged_in;
         }
 
+        public function is_admin()
+        {
+            return $this->admin;
+        }
+
+        public function is_leiter()
+        {
+            return $this->leiter;
+        }
+
         private function check_password($crypted, $pwd)
         {
             if($_SERVER['SERVER_ADDR'] == '127.0.0.1')
@@ -99,6 +109,32 @@ namespace GalClash {
             }
             else
                 return ($crypted == sha1($pwd)) ? 1 : ($crypted == '') ? 1 : 0;
+        }
+
+        public function login_form()
+        {
+?>
+            <div id="touch-screen" class="alert alert-danger">
+                <h1>Touchscreen gefunden :-)</h1>
+                <p>Falls diese Meldung länger als 1 Tag sichtbar ist:<br />Bitte Tiger unter Angabe des verwendeten Browsers Bescheid geben!</p>
+            </div>
+            <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
+                <fieldset>
+                    <legend>Login</legend>
+                    <table>
+                        <tr>
+                            <td><label for="login_user">Benutzer Name:</label></td>
+                            <td><input name="user" id="login_user" type="text" size="20" maxlength="20" /></td>
+                        </tr>
+                        <tr>
+                            <td><label for="login_pwd">Passwort</label></td>
+                            <td><input name="pwd" id="login_pwd" type="password" size="20" maxlength="20" /></td>
+                        </tr>
+                    </table>
+                    <input type="submit" value="Login" />
+                </fieldset>
+            </form>
+<?php
         }
     }
 }

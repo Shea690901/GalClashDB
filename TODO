@@ -1,5 +1,6 @@
-complete transformation of old qnd source to oo
-new css based on 'flexbox'
+- complete transformation of old qnd source to oo
+- new css based on 'flexbox'
+- documentation
 
 new features:
 - remove players from access-table

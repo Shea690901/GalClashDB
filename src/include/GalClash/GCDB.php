@@ -30,14 +30,14 @@ namespace GalClash {
                 else
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
-            return array(
+            return $row ? array(
                     'pwd' => $row->pwd,
                     'allianz' => $row->allianz,
                     'leiter' => $row->leiter,
                     'admin' => $row->admin,
                     'c_pwd' => $row->c_pwd,
                     'blocked' => $row->blocked
-                    );
+                    ) : FALSE;
         }
 
         public function update_passwd($user, $pwd)
