@@ -6,26 +6,9 @@ error_reporting(E_ALL|E_STRICT);
    - {theme}.css   : Farb- und teilweise Positionseinstellungen
 */
 
-/* config block anfang */
+require_once "config.php";
 
-$db_host       = "localhost";
-$db_port       = 3306;         /* 0 für default port */
-$db_user       = "<place_holder>";
-$db_pwd        = "<place_holder>";
-$db_name       = "<place_holder>";
-$db_charset    = "utf8";
-
-$timeout       = 3000;          /* 5 minuten */
-$css_path      = "/css/";
-$default_theme = "dark";
-
-$max_gal       = 12;
-$max_sys       = 400;
-$max_pla       = 7;
-
-/* config block ende */
-
-$_VERSION = "2.0.7";
+$_VERSION = "2.0.8";
 
 function error_message($msg)
 {
@@ -798,7 +781,7 @@ function put_search_form()
         </div>
         <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
             <fieldset>
-                <legend>Spieler oder Allianz suchen</legend>
+                <legend>Spieler oder Allianz suchen / DB Übersicht</legend>
                 <table border="0" cellpadding="0" cellspacing="4">
                     <tr>
                         <td align="right">Spieler:</td>
@@ -812,6 +795,21 @@ function put_search_form()
                         <td align="right">exakte Suche:</td>
                         <td><input name="exact" type="radio" value="1" <?php print($ex ? "checked=\"checked\"" : ""); ?> /></td>
                     </tr>
+                    <tr><td>&nbsp;</td></tr>
+                    <tr>
+                        <table border="0" cellpadding="0" cellspacing="4">
+                            <tr>
+                                <td></td>
+                                <td>Galaxie</td>
+                                <td>System</td>
+                            </tr>
+                            <tr>
+                                <td align="right">Übersicht</td>
+                                <td align="center"><input name="galaxy" type="text" size="2" maxlength="2" /></td>
+                                <td align="center"><input name="system" type="text" size="3" maxlength="3" /></td>
+                            </tr>
+                        </table>
+                    </tr>
                 </table>
                 <input type="submit" value="Suchen" /><input type="reset" value="Abbrechen" />
                 <input name="state" type="hidden" value="suchen" />
@@ -819,6 +817,39 @@ function put_search_form()
         </form>
     </div>
 <?php
+}
+
+function overview($gal, $sys)
+{
+    if($dbh = connect())
+    {
+        if($sys == 0)
+        {
+            $sth = $dbh->prepare(
+                    "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                    "gal = ? ORDER BY gal, sys, pla"
+                    );
+            $arg = array($gal);
+        }
+        else
+        {
+            $sth = $dbh->prepare(
+                    "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                    "gal = ? AND sys = ? ORDER BY gal, sys, pla"
+                    );
+            $arg = array($gal, $sys);
+        }
+        try {
+            $sth->execute($arg);
+        }
+        catch(PDOException $e) {
+            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            return NULL;
+        }
+        return $sth;
+    }
+    error_message("Bitte später nochmal versuchen...");
+    return NULL;
 }
 
 function suche($spieler, $name, $exact)
@@ -2075,6 +2106,8 @@ if($start == 0)
                     $ret = suche(TRUE, $post_vars["spieler"], $post_vars["exact"]);
                 else if($post_vars["allianz"] != "")
                     $ret = suche(FALSE, $post_vars["allianz"], $post_vars["exact"]);
+                else if($post_vars["galaxy"] != 0)
+                    $ret = overview($post_vars["galaxy"], $post_vars["system"]);
                 else
                     error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
                 if(isset($ret) && $ret->rowCount() > 0)
