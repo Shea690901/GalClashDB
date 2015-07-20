@@ -1,92 +1,94 @@
 <?php
-error_reporting(E_ALL|E_STRICT);
+namespace {
 /*
    Das CSS ist aufgeteilt auf mehrere Dateien:
    - default.css   : Standardeinstellungen für alle Geräte
    - {theme}.css   : Farb- und teilweise Positionseinstellungen
 */
 
-/* config block anfang */
+    require_once 'config.php';
 
-$db_host       = "localhost";
-$db_port       = 3306;         /* 0 für default port */
-$db_user       = "<place_holder>";
-$db_pwd        = "<place_holder>";
-$db_name       = "<place_holder>";
-$db_charset    = "utf8";
+    $_VERSION = "3.0.0α1";
 
-$timeout       = 3000;          /* 5 minuten */
-$css_path      = "/css/";
-$default_theme = "dark";
+    if(DEBUG)
+    {
+        function debug_output()
+        {
+            print('<div class="alert alert-info"><pre>');
+            var_dump($_COOKIE);
+            foreach($GLOBALS as $key => $value)
+            {
+                if(($key != 'GLOBALS') && (strpos($key, '_') !== 0))
+                {
+                    printf("%s = ", $key);
+                    var_dump($value);
+                }
+            }
+            print('</pre></div>');
+        }
+    }
+    else
+    {
+        function debug_output() {}
+    }
 
-$max_gal       = 12;
-$max_sys       = 400;
-$max_pla       = 7;
+    function message($msg, $type, $close = FALSE)
+    {
+            printf('<div class="alert alert-%s">%s</div>', $type, $msg);
+    }
 
-/* config block ende */
+    require_once 'include/password.php';
+    require_once 'include/Tiger/Base.php';
+    $GalClash = new \Tiger\AutoLoader(\Tiger\AutoLoader::APPLICATION, 'GalClash');
 
-$_VERSION = "2.0.7";
+    error_reporting(E_ALL|E_STRICT);
+    $early_errors = array();
+
+    try {
+        $db = new \GalClash\GCDB(DB_ENGINE, DB_HOST, DB_PORT, DB_NAME, DB_CHARSET, DB_USER, DB_PWD);
+    }
+    catch(\Tiger\DB_Exception $e) {
+        $early_errors[] = $e;
+    }
+
+    try {
+        $session = new GalClash\GCSession();
+        $session->open();
+    }
+    catch(\Tiger\Session_Exception $e) {
+        $early_errors[] = $e;
+    }
+
+        function _strlen($binary_string) {
+            if (function_exists('mb_strlen')) {
+                return mb_strlen($binary_string, '8bit');
+            }
+            return strlen($binary_string);
+        }
 
 function error_message($msg)
 {
-    printf("<p>%s</p>\n", $msg);
-}
-
-function is_cyrillish($txt)
-{
-    return (preg_match('/[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя]/', $txt) === 1);
-}
-
-function print_($txt)
-{
-    if(is_cyrillish($txt))
-        $fmt = '<div lang="ru">%s</div>';
-    else
-        $fmt = '%s';
-    printf($fmt, $txt);
+    message($msg, 'danger');
 }
 
 function is_admin()
 {
-    return $_SESSION["admin"];
+    global $session;
+    
+    return $session->admin;
 }
 
 function is_leiter()
 {
-    return $_SESSION["leiter"];
-}
+    global $session;
 
-function is_timeout()
-{
-    global $timeout;
-    return FALSE;
-
-    if(isset($_SESSION["time"]))
-        if((time() - $_SESSION["time"]) > $timeout)
-        {
-            error_message("Zu lange untätig... Bitte neu einloggen!");
-            return TRUE;
-        }
-    return FALSE;
-}
-
-function cancel_session()
-{
-    $_SESSION = array();
-    if(ini_get("session.use_cookies"))
-    {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
-        );
-    }
-    session_destroy();
+    return $session->leiter;
 }
 
 function put_login_form()
 {
 ?>
+    <p id="touch-screen">Touchscreen gefunden :-)<br />Bitte Tiger Bescheid geben, falls diese Meldung länger als 1d sichtbar ist!</p>
     <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
         <fieldset>
             <legend>Login</legend>
@@ -105,40 +107,56 @@ function put_login_form()
     </form>
 <?php
 }
-
-function start()
+/*
+function start($errors, $db, &$session)
 {
-    session_start();
-    if(isset($_POST["logout"]) || is_timeout())
-        cancel_session();
+    foreach($errors as $error)
+    {
+        if(get_class($error) == 'Tiger\DB_Exception')
+        {
+            $session->destroy();
+            return 1;
+        }
+        else if(get_class($error) == 'Tiger\Session_Exception')
+        {
+            $session->destroy();
+            switch($error->getCode())
+            {
+                case \Tiger\Session_Exception::SESSION_INVALID:
+                    return 2;
+                case \Tiger\Session_Exception::SESSION_TIMEOUT:
+                    return 3;
+                default:
+                    return 4;
+            }
+        }
+    }
+    if(isset($_POST["logout"]))
+        $session->destroy();
         
-    if(!isset($_SESSION["user"]))
+    if(!isset($session->user))
     {
         if(!isset($_POST["user"]))
             return 1;
-        if($dbh = connect())
+        $dbh = $db->get_handle();
+        if(check_password($dbh, $user = $_POST["user"], $_POST["pwd"]))
         {
-            if(check_password($dbh, $user = $_POST["user"], $_POST["pwd"]))
-            {
-                $_SESSION["user"] = $user;
-                $_SESSION["allianz"] = get_allianz($dbh, $user);
-                $_SESSION["time"] = time();
-                $_SESSION["admin"] = get_admin_status($dbh, $user);
-                $_SESSION["leiter"] = get_leiter_status($dbh, $user);
-                $_SESSION["c_pwd"] = get_change_password($dbh, $user);
-                return 0;
-            }
-            else
-            {
-                return 2;
-            }
+            $session->user = $user;
+            $session->allianz = get_allianz($dbh, $user);
+            $session->admin = get_admin_status($dbh, $user);
+            $session->leiter = get_leiter_status($dbh, $user);
+            $session->c_pwd = get_change_password($dbh, $user);
         }
-        return 3;
+        else
+        {
+            return 5;
+        }
     }
-    $_SESSION["time"] = time();
+    $session->time = time();
+    $session->export();
     return 0;
 }
-
+*/
 function connect()
 {
     global $db_host, $db_port, $db_port, $db_name, $db_charset, $db_user, $db_pwd;
@@ -173,10 +191,12 @@ function get_post_vars()
 
 function put_logout_button()
 {
+    global $session;
+
 ?>
     <div id="logout_b">
         <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-            Eingeloggt als: '<?php print($_SESSION["user"]); ?>'
+            Eingeloggt als: '<?php print($session->user); ?>'
             <input name="logout" type="hidden" value="1" />
             <input type="submit" value="Logout" />
         </form>
@@ -184,6 +204,7 @@ function put_logout_button()
 <?php
 }
 
+/*
 function put_theme_select()
 {
 ?>
@@ -215,6 +236,7 @@ function put_theme_select()
     </div>
 <?php
 }
+*/
 
 function put_konto_button($arg)
 {
@@ -345,6 +367,8 @@ function put_namen_kombinieren()
 
 function put_admin_forms()
 {
+    global $session;
+
     $oallianz = array_key_exists('oallianz', $_POST) ? trim(htmlspecialchars($_POST['oallianz'])) : "";
     $nallianz = array_key_exists('nallianz', $_POST) ? trim(htmlspecialchars($_POST['nallianz'])) : "";
     $allianz = array_key_exists('allianz', $_POST) ? trim(htmlspecialchars($_POST['allianz'])) : "";
@@ -382,7 +406,7 @@ function put_admin_forms()
                 print("<option selected=\"selected\">-</option>");
             foreach($rows as $row)
             {
-                if(($all == "-") && ($row->allianz == $_SESSION["allianz"]))
+                if(($all == "-") && ($row->allianz == $session->allianz))
                     $fmt = "<option selected=\"selected\">%s</option>";
                 else
                     $fmt = "<option>%s</option>";
@@ -422,7 +446,7 @@ function put_admin_forms()
             $rows = $sth->fetchAll(PDO::FETCH_OBJ);
             foreach($rows as $row)
             {
-                if($row->allianz == $_SESSION["allianz"])
+                if($row->allianz == $session->allianz)
                     $fmt = "<option selected=\"selected\">%s</option>";
                 else
                     $fmt = "<option>%s</option>";
@@ -467,7 +491,7 @@ function put_admin_forms()
                     "AND name != :name");
 
             try {
-                $sth->bindValue(":name", $_SESSION["user"]);
+                $sth->bindValue(":name", $session->user);
                 $sth->execute();
             }
             catch(PDOException $e) {
@@ -494,7 +518,7 @@ function put_admin_forms()
                         <input type="submit" value="Eintragen" /><input type="reset" value="Abbrechen" />
                         <input name="b_user" type="hidden" value="1" />
                         <input name="admin" type="hidden" value="1" />
-                        <input name="all" type="hidden" value="<?php print($_SESSION["allianz"]); ?>" />
+                        <input name="all" type="hidden" value="<?php print($session->allianz); ?>" />
                     </fieldset>
                 </form>
             </td>
@@ -515,7 +539,7 @@ function put_admin_forms()
                     "AND name != :name");
 
             try {
-                $sth->bindValue(":name", $_SESSION["user"]);
+                $sth->bindValue(":name", $session->user);
                 $sth->execute();
             }
             catch(PDOException $e) {
@@ -542,7 +566,7 @@ function put_admin_forms()
                         <input type="submit" value="Eintragen" /><input type="reset" value="Abbrechen" />
                         <input name="a_user" type="hidden" value="1" />
                         <input name="admin" type="hidden" value="1" />
-                        <input name="all" type="hidden" value="<?php print($_SESSION["allianz"]); ?>" />
+                        <input name="all" type="hidden" value="<?php print($session->allianz); ?>" />
                     </fieldset>
                 </form>
             </td>
@@ -596,7 +620,7 @@ function put_admin_forms()
             $rows = $sth->fetchAll(PDO::FETCH_OBJ);
             foreach($rows as $row)
             {
-                if($row->allianz != $_SESSION["allianz"])
+                if($row->allianz != $session->allianz)
                     printf("<option>%s</option>", $row->allianz);
             }
         }
@@ -616,9 +640,6 @@ function put_admin_forms()
             </td>
         </tr>
     </table>
-<?php
-    }
-?>
     <table border="0" cellpadding="0" cellspacing="4">
         <tr>
             <td>
@@ -665,6 +686,9 @@ function put_admin_forms()
             </td>
         </tr>
     </table>
+<?php
+    }
+?>
 <?php
 }
 
@@ -723,11 +747,8 @@ function put_add_form($spieler, $allianz)
             <fieldset>
                 <legend>Kolonie hinzufügen<?php print(is_admin() ? " / löschen" : ""); ?></legend>
                 Bitte auf korrekte Schreibweise achten: <code>BattleSqua</code> und <code>Battle5qua</code>
-                sind zwei unterschiedliche Namen!<br />
-                Das gleiche gilt für <code>BattleSqu3</code> und <code>BattleSqua3</code><br />
-                oder auch <code lang="ru">СССР</code> und <code>CCCP</code>…
-                <?php print(is_admin() ? "<ul><li>Zum Löschen bitte alle Felder ausfüllen und auf Groß-/Kleinschreibung achten!</li>" .
-                        "<li>Zum Ändern der Allianzzugehörigkeit die Koordinatenfelder frei lassen!</li></ul>" : ""); ?>
+                sind zwei unterschiedliche Namen!
+                <?php print(is_admin() ? "<br />Zum Löschen bitte alle Felder ausfüllen und auf Groß-/Kleinschreibung achten!" : ""); ?>
                 <table border="0" cellpadding="0" cellspacing="4">
                     <tr>
                         <td align="right">Spieler:</td>
@@ -782,20 +803,7 @@ function put_search_form()
     $ex = $post_vars["exact"];
 
 ?>
-    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-        <fieldset>
-            <legend>Gruppenübersicht</legend>
-<?php
-    display_uebersicht(0, "-");
-?>
-        </fieldset>
-    </form>
     <div id="search_form">
-        Kyrillische Zeichen für 'copy&amp;paste':
-        <div text-size="110%" lang="ru">
-            А Б В Г Д Е Ё Ж З И Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я<br />
-            а б в г д е ё ж з и й к л м н о п р с т у ф х ц ч ш щ ъ ы ь э ю я
-        </div>
         <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
             <fieldset>
                 <legend>Spieler oder Allianz suchen</legend>
@@ -823,36 +831,34 @@ function put_search_form()
 
 function suche($spieler, $name, $exact)
 {
-    if($dbh = connect())
+    global $db;
+
+    $dbh = $db->get_handle();
+    if($exact)
     {
-        if($exact)
-        {
-            $sth = $dbh->prepare(
-                    "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
-                    ($spieler ? "name" : "allianz") .
-                    " = ? ORDER BY allianz, name, gal, sys, pla"
-                    );
-        }
-        else
-        {
-            $name = "%" . $name . "%";
-            $sth = $dbh->prepare(
-                    "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
-                    ($spieler ? "name" : "allianz") .
-                    " LIKE ? ORDER BY allianz, name, gal, sys, pla"
-                    );
-        }
-        try {
-            $sth->execute(array($name));
-        }
-        catch(PDOException $e) {
-            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-            return NULL;
-        }
-        return $sth;
+        $sth = $dbh->prepare(
+                "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                ($spieler ? "name" : "allianz") .
+                " = ? ORDER BY allianz, name, gal, sys, pla"
+                );
     }
-    error_message("Bitte später nochmal versuchen...");
-    return NULL;
+    else
+    {
+        $name = "%" . $name . "%";
+        $sth = $dbh->prepare(
+                "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                ($spieler ? "name" : "allianz") .
+                " LIKE ? ORDER BY allianz, name, gal, sys, pla"
+                );
+    }
+    try {
+        $sth->execute(array($name));
+    }
+    catch(PDOException $e) {
+        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        return NULL;
+    }
+    return $sth;
 }
 
 function display_uebersicht($ansicht, $allianz)
@@ -970,8 +976,8 @@ function display_result($sth)
         {
 ?>
             <tr>
-                <td><?php print_($allianz != $row->allianz ? $allianz = $row->allianz : ""); $allianz = $row->allianz; ?></td>
-                <td><?php print_($spieler != $row->name ? $row->name : ""); $spieler = $row->name; ?></td>
+                <td><?php print($allianz != $row->allianz ? $allianz = $row->allianz : ""); $allianz = $row->allianz; ?></td>
+                <td><?php print($spieler != $row->name ? $row->name : ""); $spieler = $row->name; ?></td>
                 <td align="center"><?php print($row->gal); ?></td>
                 <td align="center"><?php print($row->sys); ?></td>
                 <td align="center"><?php print($row->pla); ?></td>
@@ -1103,7 +1109,7 @@ function get_member_id($dbh, $name)
 
 function update_spieler($dbh, $s_id, $a_id)
 {
-    $sth = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :s_id");
+    $sth = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = s_id");
     try {
         $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
         $sth->bindValue(":s_id", $s_id, PDO::PARAM_INT);
@@ -1147,10 +1153,6 @@ function update_coords($dbh, $c_id, $s_id)
 
 function neue_kolonie($arg)
 {
-    global $max_gal;
-    global $max_sys;
-    global $max_pla;
-
     $spieler    = $arg["spieler"];
     $allianz    = $arg["allianz"];
     $gal        = (int) $arg["galaxy"];
@@ -1161,53 +1163,11 @@ function neue_kolonie($arg)
         error_message("'-' als Spielername ist unzulässig!");
         return 0;
     }
-    if($spieler == "")
+    if(($spieler == "") || ($allianz == ""))
     {
-        error_message("Spielername muss angegeben werden!");
+        error_message("Spielername und Allianz müssen angegeben werden!");
         return 0;
     }
-    if(is_admin() && ($gal == 0) && ($sys == 0) && ($pla == 0))
-    {
-        if($dbh = connect())
-        {
-            $s_id = get_spieler_id($dbh, $spieler);
-            if($s_id == -1)
-            {
-                error_message("Spieler nicht gefunden");
-                return 0;
-            }
-            $a_id = get_allianz_id($dbh, $allianz);
-
-            try {
-                $dbh->beginTransaction();
-                
-                if($a_id == -1)
-                    $a_id = add_allianz($dbh, $allianz);
-                update_spieler($dbh, $s_id, $a_id);
-                $dbh->commit();
-            }
-            catch(PDOException $e) {
-                error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-            }
-            return;
-        }
-    }
-    if(($gal < 1) || ($gal > $max_gal))
-    {
-        error_message("Galaxy ausserhalb erlaubtem Bereich");
-        return 0;
-    }
-    if(($sys < 1) || ($sys > $max_sys))
-    {
-        error_message("System ausserhalb erlaubtem Bereich");
-        return 0;
-    }
-    if(($pla < 1) || ($pla > $max_pla))
-    {
-        error_message("Planet ausserhalb erlaubtem Bereich");
-        return 0;
-    }
-    $allianz = $allianz == "" ? "-" : $allianz;
     if($dbh = connect())
     {
         $sth = $dbh->prepare("SELECT * FROM V_spieler WHERE gal = :gal AND sys = :sys AND pla = :pla");   /* kolonie bereits vorhanden? */
@@ -1381,25 +1341,29 @@ function check_password($dbh, $user, $pwd)
 
 function update_password($dbh, $pwd)
 {
+    global $session;
+
     $sth = $dbh->prepare("UPDATE user_pwd SET pwd = :pwd, c_pwd = 0 WHERE s_id = ( SELECT s_id FROM spieler WHERE name = :name )");
     try {
         $sth->bindValue(":pwd", $pwd);
-        $sth->bindValue(":name", $_SESSION["user"]);
+        $sth->bindValue(":name", $session->user);
         $sth->execute();
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
-    $_SESSION["c_pwd"] = FALSE;
+    $session->c_pwd = FALSE;
 }
 
 function get_urlaub()
 {
+    global $session;
+
     if($dbh = connect())
     {
         $sth = $dbh->prepare("SELECT urlaub FROM V_user WHERE name = ?");
         try {
-            $sth->execute(array($_SESSION["user"]));
+            $sth->execute(array($session->user));
         }
         catch(PDOException $e) {
             return "Fehler";
@@ -1413,12 +1377,14 @@ function get_urlaub()
 
 function update_urlaub($datum)
 {
+    global $session;
+
     if($dbh = connect())
     {
         $sth = $dbh->prepare("UPDATE user_pwd SET urlaub = :datum WHERE s_id = ( SELECT s_id FROM spieler WHERE name = :name )");
         try {
             $sth->bindValue(":datum", $datum);
-            $sth->bindValue(":name", $_SESSION["user"]);
+            $sth->bindValue(":name", $session->user);
             $sth->execute();
         }
         catch(PDOException $e) {
@@ -1429,6 +1395,8 @@ function update_urlaub($datum)
 
 function update_konto()
 {
+    global $session;
+
     if(isset($_POST["pwd"]))
     {
         $opwd  = htmlspecialchars($_POST["opwd"]);
@@ -1451,7 +1419,7 @@ function update_konto()
         }
         if($dbh = connect())
         {
-            if(check_password($dbh, $_SESSION["user"], $opwd))
+            if(check_password($dbh, $session->user, $opwd))
                 update_password($dbh, sha1($npwd1));
             else
             {
@@ -1585,6 +1553,8 @@ function admin_mitglied()
 
 function sperre_mitglied()
 {
+    global $session;
+
     $name = array_key_exists('name', $_POST) ? trim(htmlspecialchars($_POST['name'])) : "";
     $func = $name[0];
     $name = substr($name, 1);
@@ -1601,7 +1571,7 @@ function sperre_mitglied()
         switch($func)
         {
             case "+":
-                $b_id = get_spieler_id($dbh, $_SESSION["user"]);
+                $b_id = get_spieler_id($dbh, $session->user);
                 if($b_id == -1)
                 {
                     error_message("Leiter nicht gefunden");
@@ -1921,147 +1891,140 @@ function allianz_aenderung()
     return 0;
 }
 
-function check_theme($arg)
-{
-    global $css_path;
-
-    if($arg == "default")
-        return FALSE;
-    $path = $_SERVER["DOCUMENT_ROOT"] . $css_path;
-    if(!is_readable($path . $arg . ".css") || is_dir($path . $arg . ".css"))
-        return FALSE;
-
-    return TRUE;
-}
-
-function get_themes()
-{
-    global $css_path;
-
-    $path = $_SERVER["DOCUMENT_ROOT"] . $css_path;
-    $flist = glob($path . "*.css");
-    $themes = array();
-
-    foreach($flist as $f)
-    {
-        $f = substr(strrchr($f, "/"), 1);
-        $p = strpos($f, ".");
-        $themes[] = substr($f, 0, $p);
-    }
-
-    return array_filter($themes, "check_theme");
-}
-
-function set_theme()
-{
-    global $theme;
-    global $default_theme;
-
-    $theme = isset($_COOKIE["GalClashDB"]["theme"]) ? $_COOKIE["GalClashDB"]["theme"] : $default_theme;
-    if((strpos($theme, "/") !== FALSE) || (check_theme($theme) == FALSE))
-        $theme = $default_theme;
-
-    if(isset($_POST["theme"]) && check_theme($_POST["theme"]))
-        setcookie("GalClashDB[theme]", $theme = $_POST["theme"], time() + 60*60*24*30);
-}
-
-set_theme();
-$start = start();
+$themes = new \GalClash\GCThemes();
+$themes->set_theme();
+$session->login($early_errors, $db);
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="de" xml:lang="de">
+<!DOCTYPE html>
+<html lang="de">
     <head>
-        <title>KoordinatenDB für Galactic Clash</title>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
-        <meta name="author" content="Tiger" />
-<?php
-$stat   = stat($_SERVER["SCRIPT_FILENAME"]);
-$mtime  = $stat['mtime'];
-printf("<meta name=\"date\" content=\"%s\" />\n", date(DATE_RFC822, $mtime));
-?>
-        <meta name="robots" content="noindex, nofollow" />
-        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <!-- Sorry, this page isn't cachable -->
         <meta http-equiv="expires" content="0" />
         <meta http-equiv="cache-control" content="no-cache" />
         <meta http-equiv="pragma" content="no-cache" />
 
-        <link rel="stylesheet" type="text/css" href="/css/default.css" />
-        <link rel="stylesheet" type="text/css" href="<?php print($css_path . $theme); ?>.css" />
+        <meta name="author" content="Tiger" />
+<?php
+    $stat   = stat($_SERVER["SCRIPT_FILENAME"]);
+    $mtime  = $stat['mtime'];
+    printf("        <meta name=\"date\" content=\"%s\" />\n", date(DATE_RFC822, $mtime));
+    unset($stat);
+    unset($mtime);
+?>
+        <meta name="robots" content="noindex, nofollow" />
+
+        <title>α KoordinatenDB für Galactic Clash</title>
+
+        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH); ?>default.css" />
+        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH . $themes->get_selected()); ?>.css" />
+        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+            <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
     </head>
 
     <body>
-        <div id="kopf">
-            <h1>KoordinatenDB für Galactic Clash</h1>
-            <hr />
 <?php
-    put_theme_select();
-    if($start == 0)
+debug_output();
+?>
+        <header>
+            <h1>KoordinatenDB für Galactic Clash</h1>
+<?php
+    if($session->is_logged_in())
     {
-        put_logout_button();
-        if(isset($_POST["konto"]) || $_SESSION["c_pwd"])
-        {
-            print("<div id=\"sub_t\">Kontensteuerung</div>");
-            put_konto_button(TRUE);
-        }
-        else
-            put_konto_button(FALSE);
+        if(is_admin() && isset($_POST["admin"]))
+            print("<h2>ADMINMODE</h2>");
+        else if(isset($_POST["konto"]) || $session->c_pwd)
+            print("<h2>Kontensteuerung</h2>");
+    }
+?>
+            <nav>
+                <div id="theme-select">
+                    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
+<?php
+    $themes->theme_select();
+    if(isset($_POST["admin"]))
+        print("<input type=\"hidden\" name=\"admin\" value=\"1\" />");
+    if(isset($_POST["konto"]))
+        print("<input type=\"hidden\" name=\"konto\" value=\"1\" />");
+?>
+                    </form>
+                </div>
+<?php
+    if($session->is_logged_in())
+    {
         if(is_admin())
         {
             if(isset($_POST["admin"]))
-            {
-                print("<div id=\"sub_t\">ADMINMODE</div>");
                 put_admin_button(TRUE);
-            }
             else
                 put_admin_button(FALSE);
         }
+        if(isset($_POST["konto"]) || $session->c_pwd)
+            put_konto_button(TRUE);
+        else
+            put_konto_button(FALSE);
+        put_logout_button();
     }
 ?>
-        </div>
+            </nav>
+        </header>
 
-        <div id="koerper">
+        <main>
+            <div id="koerper">
 <?php
-if($start == 0)
+    foreach($early_errors as $key => $value)
+    {
+        if($value !== NULL)
+            error_message(sprintf('Fehler bei Verbindungsaufbau zur Datenbank:<br />%s', $value->getMessage()));
+    }
+
+if($session->is_logged_in())
 {
-    if(isset($_POST["konto"]) || $_SESSION["c_pwd"])    /* Kontenverwaltung */
-    {
-        if(isset($_POST["update"]))
-            update_konto();
-        if(isset($_SESSION["user"]))
-            put_konto_forms($_SESSION["c_pwd"]);
-    }
-    else if(isset($_POST["admin"]))                     /* ADMIN MODE */
-    {
-?>
-<?php
-        $ret = 0;
-        if(isset($_POST["n_user"]))
-            neues_mitglied();
-        if(isset($_POST["b_user"]))
-            sperre_mitglied();
-        if(isset($_POST["a_user"]))
-            admin_mitglied();
-        if(isset($_POST["n_gruppe"]))
-            neue_allianz();
-        if(isset($_POST["l_gruppe"]))
-            entferne_allianz();
-        if(isset($_POST["n_name"]))
-            $ret = namens_aenderung();
-        if(isset($_POST["n_allianz"]))
-            $ret = allianz_aenderung();
-        switch($ret)
-        {
-            case 1:
-                put_namen_kombinieren();
-                break;
-            case 2:
-                put_allianz_kombinieren();
-                break;
-            default:
-                put_admin_forms();
-        }
-    }
-    else                                                /* normal Modus */
+//    if(isset($_POST["konto"]) || $session->c_pwd)    /* Kontenverwaltung */
+//    {
+//        if(isset($_POST["update"]))
+//            update_konto();
+//        if(isset($session->user))
+//            put_konto_forms($session->c_pwd);
+//    }
+//    else if(isset($_POST["admin"]))                     /* ADMIN MODE */
+//    {
+//        $ret = 0;
+//        if(isset($_POST["n_user"]))
+//            neues_mitglied();
+//        if(isset($_POST["b_user"]))
+//            sperre_mitglied();
+//        if(isset($_POST["a_user"]))
+//            admin_mitglied();
+//        if(isset($_POST["n_gruppe"]))
+//            neue_allianz();
+//        if(isset($_POST["l_gruppe"]))
+//            entferne_allianz();
+//        if(isset($_POST["n_name"]))
+//            $ret = namens_aenderung();
+//        if(isset($_POST["n_allianz"]))
+//            $ret = allianz_aenderung();
+//        switch($ret)
+//        {
+//            case 1:
+//                put_namen_kombinieren();
+//                break;
+//            case 2:
+//                put_allianz_kombinieren();
+//                break;
+//            default:
+//                put_admin_forms();
+//        }
+//    }
+//    else                                                /* normal Modus */
     {
         get_post_vars();
         put_search_form();
@@ -2090,9 +2053,10 @@ if($start == 0)
                 }
                 if(!$post_vars["exact"])
                     $a = $post_vars["allianz"];
-                put_add_form(isset($post_vars["spieler"]) ? $post_vars["spieler"]: "", $a == "" ? "-" : $a);
+                put_add_form(isset($post_vars["spieler"]) ? $post_vars["spieler"]: "", $a);
                 break;
             case "einfügen":
+                break;
                 if(!isset($_POST["loeschen"]))
                     neue_kolonie($post_vars);
                 else
@@ -2114,18 +2078,24 @@ if($start == 0)
 }
 else
 {
-    if($start == 2)
+    /*
+    if($start == 5)
         error_message("Falscher Benutzername oder falsches Passwort!");
-    else if($start == 3)
-        error_message("Bitte später nochmal versuchen...");
+    else
+        error_message("Bitte später nochmal versuchen...(" . $start . ')');
+        */
 
     put_login_form();
 }
 ?>
-        </div>
-        <div id="fuss">
+            </div>
+        </main>
+        <footer>
             <div id="fuss_text">Bei Fehlern oder Fragen bitte eine in-game PM an 'Tiger' (10:283:4)</div>
             <div id="version"><?php print("Version " . $_VERSION); ?></div>
-        </div>
+        </footer>
     </body>
 </html>
+<?php
+}
+?>

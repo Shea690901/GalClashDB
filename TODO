@@ -1,0 +1,13 @@
+complete transformation of old qnd source to oo…
+new css based on 'flexbox'…
+
+new features:
+- search based on galaxy or galaxy/system
+- remove players from access-table
+- reset user passwords
+- timestamps and editor for first entries
+- history for name changes and deletes
+
+
+as long as this version isn't ready for release:
+backports of urgent features
