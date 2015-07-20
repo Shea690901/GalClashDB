@@ -1,0 +1,143 @@
+/* Version 1.0 */
+
+body {
+    font-family:serif,sans-serif;
+    font-size:0.9em;
+    line-height:1.1em;
+}
+
+*[lang|=ru] {
+    font-family:sans-serif;
+}
+
+h1 {
+    font-style:italic;
+    font-variant:small-caps;
+    text-align:center;
+}
+
+td, th {
+    padding:0.2em;
+}
+
+/* Feste Positionenen für die 3 Bereiche */
+#kopf {
+    position:relative;
+    top:0px;
+    width:90%;
+    height:5.8em;
+    margin-left:5%;
+    margin-right:5%;
+}
+
+#koerper {
+    border:solid thin green;
+    position:relative;
+    height:auto;
+    margin-top:0.3em;
+    margin-bottom:0.2em;
+    margin-left:3em;
+    margin-right:3em;
+    overflow:visible;
+}
+
+#fuss {
+    position:relative;
+    width:90%;
+    height:1.2em;
+    margin-left:5%;
+    margin-right:5%;
+    font-size:0.8em;
+    text-align:left;
+}
+
+/* Positionen der Unterelemente von Kopf und Fuss */
+
+#fuss_text {
+    width:60%;
+    position:absolute;
+    bottom:0px:
+    left:0px;
+}
+
+#version {
+    width:25%;
+    position:absolute;
+    bottom:0px;
+    right:0px;
+    text-align:right;
+}
+
+#admin_b {
+    width:25%;
+    position:absolute;
+    bottom:1.5em;
+    left:25%;
+    text-align:center;
+}
+
+#sub_t {
+    width:50%;
+    border:solid thin red;
+    position:absolute;
+    bottom:0px;
+    left:25%;
+    font-style:italic;
+    font-size:1.3em;
+    font-weight:bold;
+    font-variant:small-caps;
+    text-align:center;
+}
+
+#logout_b {
+    width:25%;
+    position:absolute;
+    bottom:1.5em;
+    right:0px;
+    text-align:right;
+}
+
+#konto_b {
+    width:25%;
+    position:absolute;
+    bottom:1.5em;
+    right:25%;
+    text-align:right;
+}
+
+#theme_select {
+    width:25%;
+    position:absolute;
+    bottom:1.5em;
+    left:0px;
+}
+
+/* Formulare */
+
+#search_form {                      /* suchen eines spielers / einer allianz */
+    width:50%;
+    border:solid thin red;
+}
+
+#col_add_form {                     /* hinzufügen / löschen einer kolonie */
+    width:50%;
+    border:solid thin red;
+}
+
+/* Ausgaben */
+
+#search_res {                       /* gefundene kolonien */
+    width:40%;
+    border:solid thin red;
+}
+
+/* sonstiges */
+
+:lang(de)    { quotes:"\201E" "\201C" "\201A" "\2018"; }
+:lang(de-DE) { quotes:"\00BB" "\00AB" "\203A" "\2039"; }
+:lang(de-CH) { quotes:"\00AB" "\00BB" "\2039" "\203A"; }
+:lang(en)    { quotes:"\201C" "\201D" "\2018" "\2019"; }
+:lang(fr)    { quotes:"\00AB\00A0" "\00A0\00BB" "\2039\00A0" "\00A0\203A"; }
+
+code:before { content:open-quote; }
+code:after  { content:close-quote; }
