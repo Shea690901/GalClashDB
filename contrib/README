@@ -1,0 +1,4 @@
+- GalClashDB.sql
+
+Sql statements to create the tables for the coordinate database and the views
+and procedures needed by the php client.
