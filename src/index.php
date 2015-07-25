@@ -1355,13 +1355,13 @@ function get_admin_status($dbh, $user)
     $stmt = $dbh->prepare("SELECT admin FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    return ($row["admin"] == "1");
+    return ($row->admin == "1");
 }
 
 function get_leiter_status($dbh, $user)
@@ -1369,13 +1369,13 @@ function get_leiter_status($dbh, $user)
     $stmt = $dbh->prepare("SELECT leiter FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    return ($row["leiter"] == "1");
+    return ($row->leiter == "1");
 }
 
 function get_change_password($dbh, $user)
@@ -1383,13 +1383,13 @@ function get_change_password($dbh, $user)
     $stmt = $dbh->prepare("SELECT c_pwd FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    return ($row["c_pwd"] == "1");
+    return ($row->c_pwd == "1");
 }
 
 function check_password($dbh, $user, $pwd)
@@ -1397,16 +1397,16 @@ function check_password($dbh, $user, $pwd)
     $stmt = $dbh->prepare("SELECT pwd, blocked FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    if(isset($row["blocked"]) && ($row["blocked"] != "-"))
+    if(isset($row->blocked) && ($row->blocked != "-"))
         return FALSE;
-    if(isset($row["pwd"]))
-        return (($row["pwd"] == sha1($pwd)) || ($row["pwd"] == ""));
+    if(isset($row->pwd))
+        return (($row->pwd == sha1($pwd)) || ($row->pwd == ""));
     return FALSE;
 }
 
@@ -1435,9 +1435,9 @@ function get_urlaub()
         catch(PDOException $e) {
             return "Fehler";
         }
-        $row = $sth->fetch();
-        $datum = $row["urlaub"];
-        return ($datum == "0000-00-00" ? "-" : ($datum == "9999-12-31" ? "+" : date("d.m.Y", strtotime($row["urlaub"]))));
+        $row = $sth->fetch(PDO::FETCH_OBJ);
+        $datum = $row->urlaub;
+        return ($datum == "0000-00-00" ? "-" : ($datum == "9999-12-31" ? "+" : date("d.m.Y", strtotime($row->urlaub))));
     }
     return "Fehler";
 }
