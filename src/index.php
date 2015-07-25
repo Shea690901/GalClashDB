@@ -8,7 +8,7 @@ error_reporting(E_ALL|E_STRICT);
 
 require_once "config.php";
 
-$_VERSION = "2.0.8";
+$_VERSION = "2.0.9";
 
 function error_message($msg)
 {
@@ -101,7 +101,7 @@ function start()
             return 1;
         if($dbh = connect())
         {
-            if(check_password($dbh, $user = $_POST["user"], $_POST["pwd"]))
+            if(check_password($dbh, $user = htmlspecialchars($_POST["user"]), htmlspecialchars($_POST["pwd"])))
             {
                 $_SESSION["user"] = $user;
                 $_SESSION["allianz"] = get_allianz($dbh, $user);
