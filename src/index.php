@@ -427,10 +427,6 @@ function put_admin_forms()
             <input name="admin" type="hidden" value="1" />
         </fieldset>
     </form>
-<?php
-    if(is_leiter())
-    {
-?>
     <table>
         <tr>
             <td>
@@ -446,8 +442,10 @@ function put_admin_forms()
         if($dbh = connect())
         {
             $sth = $dbh->prepare("SELECT name, blocked FROM V_user WHERE blocked = :name OR a_id = " .
-                    "( SELECT spieler.a_id FROM ( spieler JOIN allianzen ON leiter_id = spieler.s_id ) WHERE name = :name ) " .
-                    "AND name != :name");
+                    "( SELECT spieler.a_id FROM spieler WHERE name = :name ) " .
+                    "AND name != :name " .
+                    "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = ( SELECT spieler.a_id FROM spieler WHERE name = :name ) )" .
+                    "ORDER BY name");
 
             try {
                 $sth->bindValue(":name", $_SESSION["user"]);
@@ -481,6 +479,10 @@ function put_admin_forms()
                     </fieldset>
                 </form>
             </td>
+<?php
+    if(is_leiter())
+    {
+?>
             <td>
                 <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
                     <fieldset>
