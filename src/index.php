@@ -398,16 +398,19 @@ function put_admin_forms()
             <input name="admin" type="hidden" value="1" />
         </fieldset>
     </form>
-    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-        <fieldset>
-            <legend>Neues Allianzmitglied</legend>
-            <table border="0" cellpadding="0" cellspacing="4">
-                <tr>
-                    <td align="right"><label for="name">Name:</label></td>
-                    <td><input name="name" id="name" type="Text" size="20" maxlength="20" /></td>
-                    <td align="right"><label for="allianz">Allianz:</label></td>
-                    <td>
-                        <select name="allianz" id="allianz" size="1" />
+    <table>
+        <tr>
+            <td>
+                <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
+                    <fieldset>
+                        <legend>Neues Allianzmitglied</legend>
+                        <table border="0" cellpadding="0" cellspacing="4">
+                            <tr>
+                                <td align="right"><label for="name">Name:</label></td>
+                                <td><input name="name" id="name" type="Text" size="20" maxlength="20" /></td>
+                                <td align="right"><label for="allianz">Allianz:</label></td>
+                                <td>
+                                    <select name="allianz" id="allianz" size="1" />
 <?php
     if($dbh = connect())
     {
@@ -433,24 +436,72 @@ function put_admin_forms()
         }
     }
 ?>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td align="right"><label for="pwd">Passwort:</label></td>
-                    <td><input name="pwd" id="pwd" type="Text" size="20" maxlength="20" /></td>
-                </tr>
-            </table>
-            <input type="submit" value="Eintragen" /><input type="reset" value="Abbrechen" />
-            <input name="n_user" type="hidden" value="1" />
-            <input name="admin" type="hidden" value="1" />
-        </fieldset>
-    </form>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right"><label for="pwd">Passwort:</label></td>
+                                <td><input name="pwd" id="pwd" type="Text" size="20" maxlength="20" /></td>
+                            </tr>
+                        </table>
+                        <input type="submit" value="Eintragen" /><input type="reset" value="Abbrechen" />
+                        <input name="n_user" type="hidden" value="1" />
+                        <input name="admin" type="hidden" value="1" />
+                    </fieldset>
+                </form>
+            </td>
+            <td>
+                <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
+                    <fieldset>
+                        <legend>Allianzmitglied löschen</legend>
+                        <table border="0" cellpadding="0" cellspacing="4">
+                            <tr>
+                                <td align="right"><label for="name">Name:</label></td>
+                                <td>
+                                    <select name="name" id="name" size="1" />
 <?php
-    if($session->is_leiter())
-    {
+        if($dbh = connect())
+        {
+            $sth = $dbh->prepare("SELECT name, blocked FROM V_user WHERE a_id = " .
+                    "( SELECT spieler.a_id FROM spieler WHERE name = :name ) " .
+                    "AND name != :name " .
+                    "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = ( SELECT spieler.a_id FROM spieler WHERE name = :name ) )" .
+                    "ORDER BY name");
+
+            try {
+                $sth->bindValue(":name", $_SESSION["user"]);
+                $sth->execute();
+            }
+            catch(PDOException $e) {
+                error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            }
+            if($sth->rowCount() > 0)
+            {
+                $rows = $sth->fetchAll(PDO::FETCH_OBJ);
+                printf("<option value=\"----\">Bitte auswählen!</option>");
+                foreach($rows as $row)
+                {
+                    if($row->blocked != "-")
+                        $fmt = "<option value=\"%s\">%s (gesperrt)</option>";
+                    else
+                        $fmt = "<option value=\"%s\">%s</option>";
+                    printf($fmt, $row->name, $row->name);
+                }
+            }
+        }
 ?>
-    <table>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                        <input type="submit" value="Löschen" /><input type="reset" value="Abbrechen" />
+                        <input name="l_user" type="hidden" value="1" />
+                        <input name="admin" type="hidden" value="1" />
+                        <input name="all" type="hidden" value="<?php print($_SESSION["allianz"]); ?>" />
+                    </fieldset>
+                </form>
+            </td>
+        </tr>
         <tr>
             <td>
                 <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
@@ -465,8 +516,10 @@ function put_admin_forms()
         if($dbh = connect())
         {
             $sth = $dbh->prepare("SELECT name, blocked FROM V_user WHERE blocked = :name OR a_id = " .
-                    "( SELECT spieler.a_id FROM ( spieler JOIN allianzen ON leiter_id = spieler.s_id ) WHERE name = :name ) " .
-                    "AND name != :name");
+                    "( SELECT spieler.a_id FROM spieler WHERE name = :name ) " .
+                    "AND name != :name " .
+                    "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = ( SELECT spieler.a_id FROM spieler WHERE name = :name ) )" .
+                    "ORDER BY name");
 
             try {
                 $sth->bindValue(":name", $session->user);
@@ -478,6 +531,7 @@ function put_admin_forms()
             if($sth->rowCount() > 0)
             {
                 $rows = $sth->fetchAll(PDO::FETCH_OBJ);
+                printf("<option value=\"----\">Bitte auswählen!</option>");
                 foreach($rows as $row)
                 {
                     if($row->blocked != "-")
@@ -500,6 +554,10 @@ function put_admin_forms()
                     </fieldset>
                 </form>
             </td>
+<?php
+    if(is_leiter())
+    {
+?>
             <td>
                 <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
                     <fieldset>
@@ -1309,13 +1367,13 @@ function get_admin_status($dbh, $user)
     $stmt = $dbh->prepare("SELECT admin FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    return ($row["admin"] == "1");
+    return ($row->admin == "1");
 }
 
 function get_leiter_status($dbh, $user)
@@ -1323,13 +1381,13 @@ function get_leiter_status($dbh, $user)
     $stmt = $dbh->prepare("SELECT leiter FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    return ($row["leiter"] == "1");
+    return ($row->leiter == "1");
 }
 
 function get_change_password($dbh, $user)
@@ -1337,13 +1395,13 @@ function get_change_password($dbh, $user)
     $stmt = $dbh->prepare("SELECT c_pwd FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    return ($row["c_pwd"] == "1");
+    return ($row->c_pwd == "1");
 }
 
 function check_password($dbh, $user, $pwd)
@@ -1351,16 +1409,16 @@ function check_password($dbh, $user, $pwd)
     $stmt = $dbh->prepare("SELECT pwd, blocked FROM V_user WHERE name = ?");
     try {
         if($stmt->execute(array($user)))
-            $row = $stmt->fetch();
+            $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
         error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
-    if(isset($row["blocked"]) && ($row["blocked"] != "-"))
+    if(isset($row->blocked) && ($row->blocked != "-"))
         return FALSE;
-    if(isset($row["pwd"]))
-        return (($row["pwd"] == sha1($pwd)) || ($row["pwd"] == ""));
+    if(isset($row->pwd))
+        return (($row->pwd == sha1($pwd)) || ($row->pwd == ""));
     return FALSE;
 }
 
@@ -1393,9 +1451,9 @@ function get_urlaub()
         catch(PDOException $e) {
             return "Fehler";
         }
-        $row = $sth->fetch();
-        $datum = $row["urlaub"];
-        return ($datum == "0000-00-00" ? "-" : ($datum == "9999-12-31" ? "+" : date("d.m.Y", strtotime($row["urlaub"]))));
+        $row = $sth->fetch(PDO::FETCH_OBJ);
+        $datum = $row->urlaub;
+        return ($datum == "0000-00-00" ? "-" : ($datum == "9999-12-31" ? "+" : date("d.m.Y", strtotime($row->urlaub))));
     }
     return "Fehler";
 }
@@ -1568,6 +1626,45 @@ function admin_mitglied()
             $sth->bindValue(":m_id", $m_id, PDO::PARAM_INT);
             $sth->bindValue(":admin", $func, PDO::PARAM_INT);
             $sth->execute();
+        }
+        catch(PDOException $e) {
+            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        }
+    }
+    return 0;
+}
+
+function loesche_mitglied()
+{
+    $name = array_key_exists('name', $_POST) ? trim(htmlspecialchars($_POST['name'])) : "";
+
+    if($dbh = connect())
+    {
+        $m_id = get_member_id($dbh, $name);
+        if($m_id == -1)
+        {
+            error_message("Mitglied nicht gefunden");
+            return 0;
+        }
+
+        $s_id = get_spieler_id($dbh, $name);
+        if($s_id == -1)
+        {
+            error_message("Spieler nicht gefunden");
+            return 0;
+        }
+
+        $sth1 = $dbh->prepare("UPDATE spieler SET a_id = 1 WHERE s_id = :s_id");
+        $sth2 = $dbh->prepare("DELETE FROM user_pwd WHERE m_id = :m_id");
+        try {
+            $dbh->beginTransaction();
+
+            $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
+            $sth2->bindValue(":m_id", $m_id, PDO::PARAM_INT);
+            $sth1->execute();
+            $sth2->execute();
+
+            $dbh->commit();
         }
         catch(PDOException $e) {
             error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
@@ -2027,6 +2124,8 @@ if($session->is_logged_in())
 //            neues_mitglied();
 //        if(isset($_POST["b_user"]))
 //            sperre_mitglied();
+//        if(isset($_POST["l_user"]))
+//            loesche_mitglied();
 //        if(isset($_POST["a_user"]))
 //            admin_mitglied();
 //        if(isset($_POST["n_gruppe"]))
