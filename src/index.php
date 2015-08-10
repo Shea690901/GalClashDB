@@ -555,7 +555,7 @@ function put_admin_forms()
                 </form>
             </td>
 <?php
-    if(is_leiter())
+    if($session->is_leiter())
     {
 ?>
             <td>
