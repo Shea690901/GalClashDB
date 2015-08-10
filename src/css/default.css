@@ -24,8 +24,10 @@ html {
 @media screen and (pointer:coarse) and (hover:none)
 {
     #touch-screen {
-        background-color:red;
-        display:initial;
+        display:inherit;
+    }
+    #touch-screen h1 {
+        text-align:center;
     }
 }
 
@@ -215,6 +217,7 @@ nav > * {
 .alert-danger .alert-link {
   color: #843534;
 }
+
 #fuss-text {
     order:1;
     flex:1 0 auto;
