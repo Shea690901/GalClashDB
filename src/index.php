@@ -70,8 +70,9 @@ namespace {
     try {
         $db = new \GalClash\GCDB(DB_ENGINE, DB_HOST, DB_PORT, DB_NAME, DB_CHARSET, DB_USER, DB_PWD);
     }
-    catch(\Tiger\DB_Exception $e) {
+    catch(Exception $e) {
         $early_errors[] = $e;
+        $db             = NULL;
     }
 
     /*
@@ -81,7 +82,7 @@ namespace {
         $session = new GalClash\GCSession();
         $session->open();
     }
-    catch(\Tiger\Session_Exception $e) {
+    catch(Exception $e) {
         $early_errors[] = $e;
     }
 
