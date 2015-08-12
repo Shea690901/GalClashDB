@@ -61,9 +61,9 @@ namespace {
         message($msg, 'success', TRUE);
     }
 
-    function info_message($msg, TRUE)
+    function info_message($msg)
     {
-        message($msg, 'info');
+        message($msg, 'info', TRUE);
     }
 
     function warning_message($msg)
