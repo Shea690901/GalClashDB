@@ -56,6 +56,21 @@ namespace {
         printf('%s</div>', $msg);
     }
 
+    function success_message($msg)
+    {
+        message($msg, 'success', TRUE);
+    }
+
+    function info_message($msg, TRUE)
+    {
+        message($msg, 'info');
+    }
+
+    function warning_message($msg)
+    {
+        message($msg, 'warning');
+    }
+
     function error_message($msg)
     {
         message($msg, 'danger');
