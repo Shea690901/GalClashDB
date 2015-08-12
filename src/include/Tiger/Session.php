@@ -33,6 +33,8 @@ namespace Tiger {
         private $timeout     = 300;         /* default timeout 5min */
         private $time;
 
+        private $java        = FALSE;       /* default: we don't use java */
+
         public function __construct()
         {
             if(session_status() === PHP_SESSION_DISABLED)
@@ -130,6 +132,21 @@ namespace Tiger {
             {
                 $_SESSION[$key] = $value;
             }
+        }
+
+        public function use_java()
+        {
+            return $this->java;
+        }
+
+        public function enable_java()
+        {
+            $this->java = TRUE;
+        }
+
+        public function disable_java()
+        {
+            $this->java = TRUE;
         }
     }
 }
