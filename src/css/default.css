@@ -141,7 +141,8 @@ nav > * {
 .between {
     justify-content:space-between;
 }
- 
+
+/* begin - alertboxes - from bootstrap */
 .alert {
   padding: 15px;
   margin-bottom: 20px;
@@ -217,6 +218,35 @@ nav > * {
 .alert-danger .alert-link {
   color: #843534;
 }
+/* end - alertboxes */
+
+/* begin - closable objects - from bootstrap */
+.close {
+  float: right;
+  font-size: 21px;
+  font-weight: bold;
+  line-height: 1;
+  color: #000;
+  text-shadow: 0 1px 0 #fff;
+  filter: alpha(opacity=20);
+  opacity: .2;
+}
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+  filter: alpha(opacity=50);
+  opacity: .5;
+}
+button.close {
+  -webkit-appearance: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+/* end - closable objects */
 
 #fuss-text {
     order:1;

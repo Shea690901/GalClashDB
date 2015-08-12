@@ -13,11 +13,19 @@ namespace {
 
     $_VERSION = "3.0.0α1";
 
+    /*
+    ** Some simple message outputs
+    */
     if(DEBUG)
     {
         function debug_output()
         {
-            print('<div class="alert alert-info"><pre>');
+            global $session;
+
+            print('<div class="alert alert-info">');
+            if($session->use_java())
+                printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
+            printf('<pre>');
             var_dump($_COOKIE);
             foreach($GLOBALS as $key => $value)
             {
@@ -27,7 +35,10 @@ namespace {
                     var_dump($value);
                 }
             }
-            print('</pre></div>');
+            print('</pre>');
+            if($session->use_java())
+                printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
+            printf('</div>');
         }
     }
     else
@@ -37,7 +48,12 @@ namespace {
 
     function message($msg, $type, $close = FALSE)
     {
-            printf('<div class="alert alert-%s">%s</div>', $type, $msg);
+        global $session;
+
+        printf('<div class="alert alert-%s">', $type);
+        if($close && $session->use_java())
+            printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
+        printf('%s</div>', $msg);
     }
 
     function error_message($msg)
@@ -2051,6 +2067,15 @@ $login_ret = $session->login($early_errors, $db);
             <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
+<?php
+    if($session->use_java())
+    {
+ ?>
+        <script src="/Frameworks/jquery/jquery-2.1.3.js"></script>
+        <script src="/Frameworks/bootstrap/js/bootstrap.js"></script>
+<?php
+    }
+ ?>
     </head>
 
     <body>
