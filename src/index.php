@@ -112,6 +112,7 @@ namespace {
     try {
         $session = new GalClash\GCSession();
         $session->open();
+        $session->enable_java();                /* <<<< delete this when ready <<<< */
     }
     catch(Exception $e) {
         $early_errors[] = $e;
