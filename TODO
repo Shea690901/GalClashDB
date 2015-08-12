@@ -3,7 +3,6 @@
 - documentation
 
 new features:
-- remove players from access-table
 - reset user passwords
 - timestamps and editor for first entries
 - history for name changes and deletes
