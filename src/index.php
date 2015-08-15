@@ -197,19 +197,6 @@ function connect()
     }
 }
 
-function get_post_vars()
-{
-    global $post_vars;
-
-    $post_vars["state"] = array_key_exists('state', $_POST) ? htmlspecialchars($_POST['state']) : "start";
-    $post_vars["spieler"] = array_key_exists('spieler', $_POST) ? trim(htmlspecialchars($_POST['spieler'])) : "";
-    $post_vars["allianz"] = array_key_exists('allianz', $_POST) ? trim(htmlspecialchars($_POST['allianz'])) : "";
-    $post_vars["galaxy"] = array_key_exists('galaxy', $_POST) ? htmlspecialchars($_POST['galaxy']) : 0;
-    $post_vars["system"] = array_key_exists('system', $_POST) ? htmlspecialchars($_POST['system']) : 0;
-    $post_vars["planet"] = array_key_exists('planet', $_POST) ? htmlspecialchars($_POST['planet']) : 0;
-    $post_vars["exact"] = array_key_exists('exact', $_POST) ? htmlspecialchars($_POST['exact']) == "1" : FALSE;
-}
-
 function put_logout_button()
 {
     global $session;
@@ -2202,7 +2189,6 @@ if($session->is_logged_in())
 //    }
 //    else                                                /* normal Modus */
     {
-        get_post_vars();
         put_search_form();
         
         switch($post_vars["state"])
