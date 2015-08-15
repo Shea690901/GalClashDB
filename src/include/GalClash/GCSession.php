@@ -5,7 +5,7 @@ namespace GalClash {
         private $logged_in  = FALSE;
         private $request_ob = NULL;
 
-        public function __construct(GCRequest $req)
+        public function __construct(GCRequest $req = NULL)
         {
             parent::__construct();
 //          $this->handler = new \Tiger\SessionHandler_PDO(DB_ENGINE, DB_HOST, DB_PORT, 'GalClash', 'hgttcfvkl7gf');
@@ -23,6 +23,11 @@ namespace GalClash {
 
         public function login($errors, $db)
         {
+            if(is_null($this->request_ob))
+            {
+                $this->destroy();
+                return FALSE;
+            }
             foreach($errors as $error)
             {
                 if(get_class($error) == '\Tiger\DB_Exception')

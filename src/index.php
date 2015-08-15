@@ -23,7 +23,7 @@ namespace {
             global $session;
 
             print('<div class="alert alert-info">');
-            if($session->use_java())
+            if(isset($session) && $session->use_java())
                 printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
             printf('<pre>');
             var_dump($_COOKIE);
@@ -36,7 +36,7 @@ namespace {
                 }
             }
             print('</pre>');
-            if($session->use_java())
+            if(isset($session) && $session->use_java())
                 printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
             printf('</div>');
         }
@@ -51,7 +51,7 @@ namespace {
         global $session;
 
         printf('<div class="alert alert-%s">', $type);
-        if($close && $session->use_java())
+        if($close && isset($session) && $session->use_java())
             printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
         printf('%s</div>', $msg);
     }
@@ -103,6 +103,7 @@ namespace {
     }
     catch(Exception $e) {
         $early_errors[] = $e;
+        $request = NULL;
     }
 
     /*
@@ -2045,7 +2046,7 @@ function allianz_aenderung()
 
 $themes = new \GalClash\GCThemes();
 $themes->set_theme();
-$login_ret = $session->login($early_errors, $db);
+$login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -2081,7 +2082,7 @@ $login_ret = $session->login($early_errors, $db);
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
 <?php
-    if($session->use_java())
+    if(isset($session) && $session->use_java())
     {
  ?>
         <script src="/Frameworks/jquery/jquery-2.1.3.js"></script>
@@ -2098,7 +2099,7 @@ debug_output();
         <header>
             <h1>KoordinatenDB für Galactic Clash</h1>
 <?php
-    if($session->is_logged_in())
+    if(isset($session) && $session->is_logged_in())
     {
         if($session->is_admin() && isset($_POST["admin"]))
             print("<h2>ADMINMODE</h2>");
@@ -2119,7 +2120,7 @@ debug_output();
                     </form>
                 </div>
 <?php
-    if($session->is_logged_in())
+    if(isset($session) && $session->is_logged_in())
     {
         if($session->is_admin())
         {
@@ -2147,7 +2148,7 @@ debug_output();
             error_message(sprintf('Fehler bei Verbindungsaufbau zur Datenbank:<br />%s', $value->getMessage()));
     }
 
-if($session->is_logged_in())
+if(isset($session) && $session->is_logged_in())
 {
 //    if(isset($_POST["konto"]) || $session->c_pwd)    /* Kontenverwaltung */
 //    {
@@ -2245,7 +2246,10 @@ else
     if(is_null($login_ret))
         error_message("Falscher Benutzername oder falsches Passwort!");
 
-    $session->login_form();
+    if(isset($session))
+        $session->login_form();
+    else
+        error_message('Session konnte nicht initialisiert werden!');
 }
 ?>
             </div>
