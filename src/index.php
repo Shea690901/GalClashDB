@@ -866,9 +866,9 @@ function put_add_form($spieler, $allianz)
 
 function put_search_form()
 {
-    global $post_vars;
+    global $request;
 
-    $ex = $post_vars["exact"];
+    $ex = $request->exact;
 
 ?>
     <div id="search_form">
@@ -1267,11 +1267,11 @@ function update_coords($dbh, $c_id, $s_id)
 
 function neue_kolonie($arg)
 {
-    $spieler    = $arg["spieler"];
-    $allianz    = $arg["allianz"];
-    $gal        = (int) $arg["galaxy"];
-    $sys        = (int) $arg["system"];
-    $pla        = (int) $arg["planet"];
+    $spieler    = $arg->spieler;
+    $allianz    = $arg->allianz;
+    $gal        = (int) $arg->galaxy;
+    $sys        = (int) $arg->system;
+    $pla        = (int) $arg->planet;
     if($spieler == "-")
     {
         error_message("'-' als Spielername ist unzulässig!");
@@ -1334,11 +1334,11 @@ function neue_kolonie($arg)
 
 function remove_kolonie($arg)
 {
-    $spieler    = $arg["spieler"];
-    $allianz    = $arg["allianz"];
-    $gal        = (int) $arg["galaxy"];
-    $sys        = (int) $arg["system"];
-    $pla        = (int) $arg["planet"];
+    $spieler    = $arg->spieler;
+    $allianz    = $arg->allianz;
+    $gal        = (int) $arg->galaxy;
+    $sys        = (int) $arg->system;
+    $pla        = (int) $arg->planet;
     if($spieler == "-")
     {
         error_message("'-' als Spielername ist unzulässig!");
@@ -2192,17 +2192,17 @@ if(isset($session) && $session->is_logged_in())
     {
         put_search_form();
         
-        switch($post_vars["state"])
+        switch($request->state)
         {
             case "start":
                 break;
             case "suchen":
-                if($post_vars["spieler"] != "")
-                    $ret = suche(TRUE, $post_vars["spieler"], $post_vars["exact"]);
-                else if($post_vars["allianz"] != "")
-                    $ret = suche(FALSE, $post_vars["allianz"], $post_vars["exact"]);
-                else if($post_vars["galaxy"] != 0)
-                    $ret = overview($post_vars["galaxy"], $post_vars["system"]);
+                if($request->spieler != "")
+                    $ret = suche(TRUE, $request->spieler, $request->exact);
+                else if($request->allianz != "")
+                    $ret = suche(FALSE, $request->allianz, $request->exact);
+                else if($request->galaxy != 0)
+                    $ret = overview($request->galaxy, $request->system);
                 else
                     error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
                 if(isset($ret) && $ret->rowCount() > 0)
@@ -2216,25 +2216,25 @@ if(isset($session) && $session->is_logged_in())
                     error_message("Nichts gefunden.");
                     $a = "";
                 }
-                if(!$post_vars["exact"])
-                    $a = $post_vars["allianz"];
-                put_add_form(isset($post_vars["spieler"]) ? $post_vars["spieler"]: "", $a);
+                if(!$request->exact)
+                    $a = $request->allianz;
+                put_add_form(isset($request->spieler) ? $request->spieler: "", $a);
                 break;
             case "einfügen":
                 break;
                 if(!isset($_POST["loeschen"]))
-                    neue_kolonie($post_vars);
+                    neue_kolonie($request);
                 else
                 {
                     if(!isset($_POST["force"]))
                         error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
                     else
-                        remove_kolonie($post_vars);
+                        remove_kolonie($request);
                 }
-                $ret = suche(TRUE, $post_vars["spieler"], TRUE);
+                $ret = suche(TRUE, $request->spieler, TRUE);
                 if(isset($ret) && $ret->rowCount() > 0)
                     display_result($ret);
-                put_add_form($post_vars["spieler"], $post_vars["allianz"]);
+                put_add_form($request->spieler, $request->allianz);
                 break;
             default:
                 error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
