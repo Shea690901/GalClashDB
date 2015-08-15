@@ -89,6 +89,20 @@ namespace Tiger {
             $this->time = time();
         }
 
+        private function keep_vars($key)
+        {
+            switch($key)
+            {
+                case 'fingerprint':
+                case 'java':
+                case 'timeout':
+                case 'time':
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+        }
+
         public function destroy()
         {
             $_SESSION = array();
@@ -102,8 +116,10 @@ namespace Tiger {
             }
             foreach($this as $key => $value)
             {
-                unset($this->$key);
+                if(!$this->keep_vars($key))
+                    unset($this->$key);
             }
+            $this->fingerprint = NULL;
             session_destroy();
         }
 
@@ -136,7 +152,7 @@ namespace Tiger {
 
         public function use_java()
         {
-            return $this->java;
+            return isset($this->java) ? $this->java : FALSE;
         }
 
         public function enable_java()
