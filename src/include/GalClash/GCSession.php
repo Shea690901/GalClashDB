@@ -2,15 +2,17 @@
 namespace GalClash {
     class GCSession extends \Tiger\Session {
         private $handler;
-        private $logged_in = FALSE;
+        private $logged_in  = FALSE;
+        private $request_ob = NULL;
 
-        public function __construct()
+        public function __construct(GCRequest $req)
         {
             parent::__construct();
 //          $this->handler = new \Tiger\SessionHandler_PDO(DB_ENGINE, DB_HOST, DB_PORT, 'GalClash', 'hgttcfvkl7gf');
 //          session_set_save_handler($this->handler, true);
 //          register_shutdown_function('session_write_close');
             session_name('GalClashSession');
+            $this->request_ob = $req;
         }
 
         public function __destruct()
@@ -36,7 +38,7 @@ namespace GalClash {
                     return FALSE;
                 }
             }
-            if(isset($_POST["logout"]))
+            if(isset($this->request_ob->logout))
             {
                 $this->logged_in = FALSE;
                 $this->destroy();
@@ -45,9 +47,9 @@ namespace GalClash {
                 
             if(!isset($this->user))
             {
-                if(!isset($_POST['user']))
+                if(!isset($this->request_ob->user))
                     return FALSE;
-                $user      = $_POST['user'];
+                $user      = $this->request_ob->user;
                 $dbh       = $db->get_handle();
                 try {
                     $user_info = $db->get_user_info($user);
@@ -56,10 +58,10 @@ namespace GalClash {
                     printf('<pre>%s</pre>', $e->getMessage());
                     return FALSE;
                 }
-                if($user_info && ($user_info['blocked'] == '-') && ($recrypt = $this->check_password($user_info['pwd'], $_POST["pwd"])))
+                if($user_info && ($user_info['blocked'] == '-') && ($recrypt = $this->check_password($user_info['pwd'], $this->request_ob->pwd)))
                 {
                     if($recrypt == 2)
-                        $db->update_passwd($user, $t = password_hash($_POST['pwd'], PASSWORD_DEFAULT));
+                        $db->update_passwd($user, $t = password_hash($this->request_ob->pwd, PASSWORD_DEFAULT));
                     $this->user     = $user;
                     $this->allianz  = $user_info['allianz'];
                     $this->admin    = $user_info['admin'];

@@ -96,6 +96,16 @@ namespace {
     $early_errors = array();
 
     /*
+    ** get sanitized request variables
+    */
+    try {
+        $request = new GalClash\GCRequest();
+    }
+    catch(Exception $e) {
+        $early_errors[] = $e;
+    }
+
+    /*
     ** connect to the database
     */
     try {
@@ -110,7 +120,7 @@ namespace {
     ** initialize the session
     */
     try {
-        $session = new GalClash\GCSession();
+        $session = new GalClash\GCSession($request);
         $session->open();
         $session->enable_java();                /* <<<< delete this when ready <<<< */
     }
