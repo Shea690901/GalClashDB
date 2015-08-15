@@ -46,7 +46,7 @@ namespace Tiger {
             else
             {
                 if(\DEBUG)
-                    throw new \InvalidArgumentException(sprintf('Invalid Argument to set_var_filter expected callable, got %s', var_export($filter)));
+                    throw new \InvalidArgumentException(sprintf('Invalid Argument to set_var_filter expected callable, got %s', var_export($filter, TRUE)));
             }
 
         }
