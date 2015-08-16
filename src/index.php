@@ -1891,8 +1891,8 @@ function allianz_aenderung()
         <meta http-equiv="cache-control" content="no-cache" />
         <meta http-equiv="pragma" content="no-cache" />
 
-        <!--neither should be followed by any spiders -->
-        <meta name="robots" content="noindex, nofollow" />
+        <!--neither should be followed by any spiders or stored in cache -->
+        <meta name="robots" content="noindex, nofollow, noarchive" />
 
         <meta name="author" content="Tiger" />
 <?php
@@ -1916,10 +1916,8 @@ function allianz_aenderung()
 <?php
     if(isset($session) && $session->use_java())
     {
- ?>
-        <script src="<?php print(JQUERY_PATH); ?>"></script>
-        <script src="<?php print(SCRIPT_PATH); ?>"></script>
-<?php
+        printf("\t\t<script src=\"%s\"></script>\n", JQUERY_PATH);
+        printf("\t\t<script src=\"%s\"></script>\n", SCRIPT_PATH);
     }
  ?>
     </head>
