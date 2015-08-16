@@ -1,6 +1,7 @@
 - complete transformation of old qnd source to oo
 - new css based on 'flexbox'
 - documentation
+- forms/varables cleanup
 
 new features:
 - reset user passwords
