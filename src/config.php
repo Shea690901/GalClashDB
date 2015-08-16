@@ -12,6 +12,9 @@ namespace {
     const CSS_PATH      = '/css/';
     const DEFAULT_THEME = 'dark';
 
+    const JQUERY_PATH   = '/Frameworks/jquery/jquery-2.1.3.js';
+    const SCRIPT_PATH   = '/Frameworks/bootstrap/js/bootstrap.js';
+
     const DEBUG         = FALSE;
 }
 ?>

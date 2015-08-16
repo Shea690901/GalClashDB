@@ -129,6 +129,17 @@ namespace {
         $early_errors[] = $e;
     }
 
+    /*
+    ** initialize css-themes
+    */
+    $themes = new \GalClash\GCThemes();
+    $themes->set_theme();
+
+    /*
+    ** login
+    */
+    $login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
+
 function put_allianz_kombinieren()
 {
     global $request;
@@ -1866,10 +1877,6 @@ function allianz_aenderung()
     }
     return 0;
 }
-
-$themes = new \GalClash\GCThemes();
-$themes->set_theme();
-$login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -1884,15 +1891,17 @@ $login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
         <meta http-equiv="cache-control" content="no-cache" />
         <meta http-equiv="pragma" content="no-cache" />
 
+        <!--neither should be followed by any spiders -->
+        <meta name="robots" content="noindex, nofollow" />
+
         <meta name="author" content="Tiger" />
 <?php
     $stat   = stat($_SERVER["SCRIPT_FILENAME"]);
     $mtime  = $stat['mtime'];
-    printf("        <meta name=\"date\" content=\"%s\" />\n", date(DATE_RFC822, $mtime));
+    printf("\t\t<meta name=\"date\" content=\"%s\" />\n", date(DATE_RFC822, $mtime));
     unset($stat);
     unset($mtime);
 ?>
-        <meta name="robots" content="noindex, nofollow" />
 
         <title>α KoordinatenDB für Galactic Clash</title>
 
@@ -1908,8 +1917,8 @@ $login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
     if(isset($session) && $session->use_java())
     {
  ?>
-        <script src="/Frameworks/jquery/jquery-2.1.3.js"></script>
-        <script src="/Frameworks/bootstrap/js/bootstrap.js"></script>
+        <script src="<?php print(JQUERY_PATH); ?>"></script>
+        <script src="<?php print(SCRIPT_PATH); ?>"></script>
 <?php
     }
  ?>
