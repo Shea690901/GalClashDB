@@ -129,71 +129,6 @@ namespace {
         $early_errors[] = $e;
     }
 
-function put_logout_button()
-{
-    global $session;
-
-?>
-    <div id="logout_b">
-        <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-            Eingeloggt als: '<?php print($session->user); ?>'
-            <input name="logout" type="hidden" value="1" />
-            <input type="submit" value="Logout" />
-        </form>
-    </div>
-<?php
-}
-
-function put_konto_button($arg)
-{
-?>
-    <div id="konto_b">
-        <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-<?php
-    if(!$arg)
-    {
-?>
-            <input name="konto" type="hidden" value="1" />
-            <input type="submit" value="Benutzerkonto" />
-<?php
-    }
-    else
-    {
-?>
-            <input type="submit" value="Zurück" />
-<?php
-    }
-?>
-        </form>
-    </div>
-<?php
-}
-
-function put_admin_button($arg)
-{
-?>
-    <div id="admin_b">
-        <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-<?php
-    if(!$arg)
-    {
-?>
-            <input name="admin" type="hidden" value="1" />
-            <input type="submit" value="ADMIN MODE" />
-<?php
-    }
-    else
-    {
-?>
-            <input type="submit" value="Zurück" />
-<?php
-    }
-?>
-        </form>
-    </div>
-<?php
-}
-
 function put_allianz_kombinieren()
 {
     global $request;
@@ -2010,18 +1945,9 @@ debug_output();
 <?php
     if(isset($session) && $session->is_logged_in())
     {
-        if($session->is_admin())
-        {
-            if(isset($request->admin))
-                put_admin_button(TRUE);
-            else
-                put_admin_button(FALSE);
-        }
-        if(isset($request->konto) || $session->c_pwd)
-            put_konto_button(TRUE);
-        else
-            put_konto_button(FALSE);
-        put_logout_button();
+        $session->admin_button(isset($request->admin));
+        $session->konto_button(isset($fequest->konto) || $session->c_pwd);
+        $session->logout_button();
     }
 ?>
             </nav>
