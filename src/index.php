@@ -123,7 +123,7 @@ namespace {
     try {
         $session = new GalClash\GCSession($request);
         $session->open();
-        $session->enable_java();                /* <<<< delete this when ready <<<< */
+        $session->enable_java();                // <<<< delete this when ready <<<<
     }
     catch(Exception $e) {
         $early_errors[] = $e;
@@ -139,6 +139,8 @@ namespace {
     ** login
     */
     $login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
+
+    $page = new \GalClash\GCPage($request, $session, $themes);
 
 function put_allianz_kombinieren()
 {
@@ -1877,89 +1879,17 @@ function allianz_aenderung()
     }
     return 0;
 }
+
+
+/*
+** Output begins here
+*/
+
+    $page->head();
+    debug_output();     // <<<< delete for production, together with definition up top <<<<
+
+    $page->header();
 ?>
-<!DOCTYPE html>
-<html lang="de">
-    <head>
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-
-        <!-- Sorry, this page isn't cachable -->
-        <meta http-equiv="expires" content="0" />
-        <meta http-equiv="cache-control" content="no-cache" />
-        <meta http-equiv="pragma" content="no-cache" />
-
-        <!--neither should be followed by any spiders or stored in cache -->
-        <meta name="robots" content="noindex, nofollow, noarchive" />
-
-        <meta name="author" content="Tiger" />
-<?php
-    $stat   = stat($_SERVER["SCRIPT_FILENAME"]);
-    $mtime  = $stat['mtime'];
-    printf("\t\t<meta name=\"date\" content=\"%s\" />\n", date(DATE_RFC822, $mtime));
-    unset($stat);
-    unset($mtime);
-?>
-
-        <title>α KoordinatenDB für Galactic Clash</title>
-
-        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH); ?>default.css" />
-        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH . $themes->get_selected()); ?>.css" />
-        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-        <!--[if lt IE 9]>
-            <script src="https://oss.maxcdn.com/html5shiv/last/mainfile"></script>
-            <script src="https://oss.maxcdn.com/respond/last/mainfile"></script>
-        <![endif]-->
-<?php
-    if(isset($session) && $session->use_java())
-    {
-        printf("\t\t<script src=\"%s\"></script>\n", JQUERY_PATH);
-        printf("\t\t<script src=\"%s\"></script>\n", SCRIPT_PATH);
-    }
- ?>
-    </head>
-
-    <body>
-<?php
-debug_output();
-?>
-        <header>
-            <h1>KoordinatenDB für Galactic Clash</h1>
-<?php
-    if(isset($session) && $session->is_logged_in())
-    {
-        if($session->is_admin() && isset($request->admin))
-            print("<h2>ADMINMODE</h2>");
-        else if(isset($request->konto) || $session->c_pwd)
-            print("<h2>Kontensteuerung</h2>");
-    }
-?>
-            <nav>
-                <div id="theme-select">
-                    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-<?php
-    $themes->theme_select();
-    if(isset($request->admin))
-        print("<input type=\"hidden\" name=\"admin\" value=\"1\" />");
-    if(isset($request->konto))
-        print("<input type=\"hidden\" name=\"konto\" value=\"1\" />");
-?>
-                    </form>
-                </div>
-<?php
-    if(isset($session) && $session->is_logged_in())
-    {
-        $session->admin_button(isset($request->admin));
-        $session->konto_button(isset($fequest->konto) || $session->c_pwd);
-        $session->logout_button();
-    }
-?>
-            </nav>
-        </header>
-
         <main>
             <div id="koerper">
 <?php

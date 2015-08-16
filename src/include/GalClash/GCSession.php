@@ -156,59 +156,6 @@ namespace GalClash {
             </div>
 <?php
         }
-
-        function konto_button($arg)
-        {
-?>
-            <div id="konto_b">
-                <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-<?php
-            if(!$arg)
-            {
-?>
-                    <input name="konto" type="hidden" value="1" />
-                    <input type="submit" value="Benutzerkonto" />
-<?php
-            }
-            else
-            {
-?>
-                    <input type="submit" value="Zurück" />
-<?php
-            }
-?>
-                </form>
-            </div>
-<?php
-        }
-
-        function admin_button($arg)
-        {
-            if($this->is_admin())
-            {
-?>
-                <div id="admin_b">
-                    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-<?php
-                if(!$arg)
-                {
-?>
-                        <input name="admin" type="hidden" value="1" />
-                        <input type="submit" value="ADMIN MODE" />
-<?php
-                }
-                else
-                {
-?>
-                        <input type="submit" value="Zurück" />
-<?php
-                }
-?>
-                    </form>
-                </div>
-<?php
-            }
-        }
     }
 }
 
