@@ -17,13 +17,25 @@ namespace GalClash {
 
         private function set_defaults()
         {
-            $this->state	= "start";
-            $this->spieler	= "";
-            $this->allianz	= "";
-            $this->galaxy	= 0;
-            $this->system	= 0;
-            $this->planet	= 0;
-            $this->exact	= FALSE;
+            $this->state	= "";           /* state for statemachine */
+
+            $this->alliance     = "";           /* alliance name to search for */
+            $this->name         = "";           /* player name to search for */
+
+            $this->galaxy   	= 0;
+            $this->system   	= 0;            /* coordinates of planet */
+            $this->planet   	= 0;
+
+            $this->exact    	= FALSE;        /* search exact or aproximatly when searching for names */
+
+            /*
+            ** renaming
+            */
+            $this->oalliance	= "";           /* old alliance name */
+            $this->nalliance	= "";           /* new alliance name */
+            $this->oname      	= "";           /* old player name */
+            $this->nname      	= "";           /* new player name */
+            $this->force        = 0;            /* force rename despite conflict? */
         }
     }
 }
