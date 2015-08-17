@@ -141,6 +141,12 @@ namespace {
     $login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
 
     /*
+    ** last chance to change session in case of errors
+    */
+    if(sizeof($early_errors) && isset($session))
+            $session->destroy();        // just to be sure…
+
+    /*
     ** Output begins here
     */
     $page = new \GalClash\GCPage($request, $session, $themes);
@@ -1889,12 +1895,15 @@ function allianz_aenderung()
     $page->header();
     $page->start_main();
 
-    foreach($early_errors as $key => $value)
-    {
-        if($value !== NULL)
-            error_message(sprintf('Fehler bei Verbindungsaufbau zur Datenbank:<br />%s', $value->getMessage()));
-    }
 
+    if(sizeof($early_errors))           // Ouch, we had some errrors
+    {
+        foreach($early_errors as $key => $value)
+        {
+            if($value !== NULL)
+                error_message(sprintf('Fehler bei Verbindungsaufbau zur Datenbank:<br />%s', $value->getMessage()));
+        }
+    }
     if(!isset($session))                // Ups… without a session we have a problem…
     {
         error_message('Session konnte nicht initialisiert werden!');
