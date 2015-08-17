@@ -98,13 +98,7 @@ namespace {
     /*
     ** get sanitized request variables
     */
-    try {
-        $request = new GalClash\GCRequest();
-    }
-    catch(Exception $e) {
-        $early_errors[] = $e;
-        $request = NULL;
-    }
+    $request = new GalClash\GCRequest();
 
     /*
     ** connect to the database
@@ -138,7 +132,7 @@ namespace {
     /*
     ** login
     */
-    $login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
+    $login_ret = isset($session) ? $session->login($early_errors, $db) : NULL;
 
     /*
     ** last chance to change session in case of errors
