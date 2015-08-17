@@ -17,7 +17,7 @@ namespace GalClash {
 
         private function set_defaults()
         {
-            $this->state	= "";           /* state for statemachine */
+            $this->state	    = "start";      /* state for statemachine */
 
             $this->alliance     = "";           /* alliance name to search for */
             $this->name         = "";           /* player name to search for */
