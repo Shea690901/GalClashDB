@@ -2,27 +2,20 @@
 namespace GalClash {
     class GCPage extends \Tiger\Base {
 
+        /*
+        ** __constructor
+        ** prints:
+        ** - doctypedefonition
+        ** - html opening tag
+        ** - head section
+        ** - body opening tag
+        */
         public function __construct(GCRequest $request, GCSession $session = NULL, GCThemes $themes)
         {
             parent::__construct();
             $this->req    = $request;
             $this->ses    = $session;
             $this->themes = $themes;
-        }
-
-        public function __destruct()
-        {
-            parent::__destruct();
-        }
-
-        /*
-        ** - doctypedefonition
-        ** - html opening tag
-        ** - head section
-        ** - body opening tag
-        */
-        public function head()
-        {
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -73,6 +66,20 @@ namespace GalClash {
         }
 
         /*
+        ** __destructor
+        ** prints:
+        ** body and html end tags
+        */
+        public function __destruct()
+        {
+?>
+    </body>
+</html>
+<?php
+            parent::__destruct();
+        }
+
+        /*
         ** header section
         */
         public function header()
@@ -112,6 +119,17 @@ namespace GalClash {
 ?>
             </nav>
         </header>
+<?php
+        }
+
+        public function footer()
+        {
+            global $_VERSION;
+?>
+        <footer>
+            <div id="fuss_text">Bei Fehlern oder Fragen bitte eine in-game PM an 'Tiger' (10:283:4)</div>
+            <div id="version"><?php print("Version " . $_VERSION); ?></div>
+        </footer>
 <?php
         }
 

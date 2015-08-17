@@ -38,7 +38,7 @@ namespace {
             print('</pre>');
             if(isset($session) && $session->use_java())
                 printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
-            printf('</div>');
+            printf("</div>\n");
         }
     }
     else
@@ -140,6 +140,9 @@ namespace {
     */
     $login_ret = isset($session) ? $session->login($early_errors, $db) : FALSE;
 
+    /*
+    ** Output begins here
+    */
     $page = new \GalClash\GCPage($request, $session, $themes);
 
 function put_allianz_kombinieren()
@@ -1881,11 +1884,6 @@ function allianz_aenderung()
 }
 
 
-/*
-** Output begins here
-*/
-
-    $page->head();
     debug_output();     // <<<< delete for production, together with definition up top <<<<
 
     $page->header();
@@ -2005,12 +2003,7 @@ else
 ?>
             </div>
         </main>
-        <footer>
-            <div id="fuss_text">Bei Fehlern oder Fragen bitte eine in-game PM an 'Tiger' (10:283:4)</div>
-            <div id="version"><?php print("Version " . $_VERSION); ?></div>
-        </footer>
-    </body>
-</html>
 <?php
+    $page->footer();
 }
 ?>
