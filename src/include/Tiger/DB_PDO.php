@@ -21,9 +21,9 @@ namespace Tiger {
             try {
                 $this->dbh = new \PDO($dsn, $user, $password, $options);
             }
-            catch(\PDOException $e) {
+            catch(\Exception $e) {
                 if(DEBUG)
-                    throw new DB_Exception(DB_Exception::DB_INACCESSABLE, sprintf('PDOException(%s) for "%s"', $e->getMessage(), $dsn));
+                    throw new DB_Exception(DB_Exception::DB_INACCESSABLE, sprintf('Exception(%s) for "%s"', $e->getMessage(), $dsn));
                 else
                     throw new DB_Exception(DB_Exception::DB_INACCESSABLE, NULL, $e);
             }
