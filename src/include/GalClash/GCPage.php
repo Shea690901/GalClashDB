@@ -122,6 +122,22 @@ namespace GalClash {
 <?php
         }
 
+        public function start_main()
+        {
+?>
+        <main>
+            <div id="koerper">
+<?php
+        }
+
+        public function end_main()
+        {
+?>
+            </div>
+        </main>
+<?php
+        }
+
         public function footer()
         {
             global $_VERSION;

@@ -1887,123 +1887,121 @@ function allianz_aenderung()
     debug_output();     // <<<< delete for production, together with definition up top <<<<
 
     $page->header();
-?>
-        <main>
-            <div id="koerper">
-<?php
+    $page->start_main();
+
     foreach($early_errors as $key => $value)
     {
         if($value !== NULL)
             error_message(sprintf('Fehler bei Verbindungsaufbau zur Datenbank:<br />%s', $value->getMessage()));
     }
 
-if(isset($session) && $session->is_logged_in())
-{
-    if(isset($request->konto) || $session->c_pwd)    /* Kontenverwaltung */
+    if(!isset($session))                // Ups… without a session we have a problem…
     {
-//        if(isset($_POST["update"]))
-//            update_konto();
-//        if(isset($session->user))
-            put_konto_forms($session->c_pwd);
+        error_message('Session konnte nicht initialisiert werden!');
     }
-    else if(isset($request->admin))                     /* ADMIN MODE */
+    else if(!$session->is_logged_in())  // We he a session, but it's not logged in yet
     {
-//        $ret = 0;
-//        if(isset($_POST["n_user"]))
-//            neues_mitglied();
-//        if(isset($_POST["b_user"]))
-//            sperre_mitglied();
-//        if(isset($_POST["l_user"]))
-//            loesche_mitglied();
-//        if(isset($_POST["a_user"]))
-//            admin_mitglied();
-//        if(isset($_POST["n_gruppe"]))
-//            neue_allianz();
-//        if(isset($_POST["l_gruppe"]))
-//            entferne_allianz();
-//        if(isset($_POST["n_name"]))
-//            $ret = namens_aenderung();
-//        if(isset($_POST["n_allianz"]))
-//            $ret = allianz_aenderung();
-//        switch($ret)
-//        {
-//            case 1:
-//                put_namen_kombinieren();
-//                break;
-//            case 2:
-//                put_allianz_kombinieren();
-//                break;
-//            default:
-                put_admin_forms();
-//        }
+        if(is_null($login_ret))         // this try went wrong…
+            error_message("Falscher Benutzername oder falsches Passwort!");
+
+        $session->login_form();
     }
-    else                                                /* normal Modus */
+    else                                // now we may work…
     {
-        put_search_form();
-        
-        switch($request->state)
+        if(isset($request->konto) || $session->c_pwd)    /* Kontenverwaltung */
         {
-            case "start":
-                break;
-            case "suchen":
-                if($request->spieler != "")
-                    $ret = suche(TRUE, $request->spieler, $request->exact);
-                else if($request->allianz != "")
-                    $ret = suche(FALSE, $request->allianz, $request->exact);
-                else if($request->galaxy != 0)
-                    $ret = overview($request->galaxy, $request->system);
-                else
-                    error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
-                if(isset($ret) && $ret->rowCount() > 0)
-                {
-                    print("<div id=\"search_res\">");
-                    $a = display_result($ret);
-                    print("</div>");
-                }
-                else
-                {
-                    error_message("Nichts gefunden.");
-                    $a = "";
-                }
-                if(!$request->exact)
-                    $a = $request->allianz;
-                put_add_form(isset($request->spieler) ? $request->spieler: "", $a);
-                break;
-            case "einfügen":
-                break;
-                if(!isset($request->loeschen))
-                    neue_kolonie($request);
-                else
-                {
-                    if(!isset($request->force))
-                        error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
+    //        if(isset($_POST["update"]))
+    //            update_konto();
+    //        if(isset($session->user))
+                put_konto_forms($session->c_pwd);
+        }
+        else if(isset($request->admin))                     /* ADMIN MODE */
+        {
+    //        $ret = 0;
+    //        if(isset($_POST["n_user"]))
+    //            neues_mitglied();
+    //        if(isset($_POST["b_user"]))
+    //            sperre_mitglied();
+    //        if(isset($_POST["l_user"]))
+    //            loesche_mitglied();
+    //        if(isset($_POST["a_user"]))
+    //            admin_mitglied();
+    //        if(isset($_POST["n_gruppe"]))
+    //            neue_allianz();
+    //        if(isset($_POST["l_gruppe"]))
+    //            entferne_allianz();
+    //        if(isset($_POST["n_name"]))
+    //            $ret = namens_aenderung();
+    //        if(isset($_POST["n_allianz"]))
+    //            $ret = allianz_aenderung();
+    //        switch($ret)
+    //        {
+    //            case 1:
+    //                put_namen_kombinieren();
+    //                break;
+    //            case 2:
+    //                put_allianz_kombinieren();
+    //                break;
+    //            default:
+                    put_admin_forms();
+    //        }
+        }
+        else                                                /* normal Modus */
+        {
+            put_search_form();
+            
+            switch($request->state)
+            {
+                case "start":
+                    break;
+                case "suchen":
+                    if($request->spieler != "")
+                        $ret = suche(TRUE, $request->spieler, $request->exact);
+                    else if($request->allianz != "")
+                        $ret = suche(FALSE, $request->allianz, $request->exact);
+                    else if($request->galaxy != 0)
+                        $ret = overview($request->galaxy, $request->system);
                     else
-                        remove_kolonie($request);
-                }
-                $ret = suche(TRUE, $request->spieler, TRUE);
-                if(isset($ret) && $ret->rowCount() > 0)
-                    display_result($ret);
-                put_add_form($request->spieler, $request->allianz);
-                break;
-            default:
-                error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
+                        error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
+                    if(isset($ret) && $ret->rowCount() > 0)
+                    {
+                        print("<div id=\"search_res\">");
+                        $a = display_result($ret);
+                        print("</div>");
+                    }
+                    else
+                    {
+                        error_message("Nichts gefunden.");
+                        $a = "";
+                    }
+                    if(!$request->exact)
+                        $a = $request->allianz;
+                    put_add_form(isset($request->spieler) ? $request->spieler: "", $a);
+                    break;
+                case "einfügen":
+                    break;
+                    if(!isset($request->loeschen))
+                        neue_kolonie($request);
+                    else
+                    {
+                        if(!isset($request->force))
+                            error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
+                        else
+                            remove_kolonie($request);
+                    }
+                    $ret = suche(TRUE, $request->spieler, TRUE);
+                    if(isset($ret) && $ret->rowCount() > 0)
+                        display_result($ret);
+                    put_add_form($request->spieler, $request->allianz);
+                    break;
+                default:
+                    error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
+            }
         }
     }
-}
-else
-{
-    if(is_null($login_ret))
-        error_message("Falscher Benutzername oder falsches Passwort!");
 
-    if(isset($session))
-        $session->login_form();
-    else
-        error_message('Session konnte nicht initialisiert werden!');
-}
-?>
-            </div>
-        </main>
-<?php
+    // that's it…
+    $page->end_main();
     $page->footer();
 }
 ?>
