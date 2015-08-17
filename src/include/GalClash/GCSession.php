@@ -99,7 +99,7 @@ namespace GalClash {
             return $this->leiter;
         }
 
-        private function check_password($crypted, $pwd)
+        public function check_password($crypted, $pwd)
         {
             if($_SERVER['SERVER_ADDR'] == '127.0.0.1')
             {

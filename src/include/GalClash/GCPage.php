@@ -113,7 +113,7 @@ namespace GalClash {
             if(isset($this->ses) && $this->ses->is_logged_in())
             {
                 $this->admin_button(isset($this->req->admin));
-                $this->konto_button(isset($this->req->konto) || $this->ses->c_pwd);
+                $this->profile_button(isset($this->req->profile) || $this->ses->c_pwd);
                 $this->ses->logout_button();
             }
 ?>
@@ -149,17 +149,17 @@ namespace GalClash {
 <?php
         }
 
-        private function konto_button($arg)
+        private function profile_button($arg)
         {
 ?>
-            <div id="konto_b">
+            <div id="profile_b">
                 <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
 <?php
             if(!$arg)
             {
 ?>
-                    <input name="konto" type="hidden" value="1" />
-                    <input type="submit" value="Benutzerkonto" />
+                    <input name="profile" type="hidden" value="1" />
+                    <input type="submit" value="Benutzerprofil" />
 <?php
             }
             else
