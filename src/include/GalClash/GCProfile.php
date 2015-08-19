@@ -23,17 +23,17 @@ namespace GalClash {
                 $npwd2 = $request->npwd2;
                 if(strlen($npwd1) < 8)
                 {
-                    \error_message("Passwort zu kurz!");
+                    error_message("Passwort zu kurz!");
                     return;
                 }
                 if($npwd1 != $npwd2)
                 {
-                    \error_message("Passwörter stimmen nicht überein!");
+                    error_message("Passwörter stimmen nicht überein!");
                     return;
                 }
                 if($opwd == $npwd1)
                 {
-                    \error_message("Altes und neues Passwort sind identisch!");
+                    error_message("Altes und neues Passwort sind identisch!");
                     return;
                 }
 
@@ -41,7 +41,7 @@ namespace GalClash {
                     $user_info = $this->db->get_user_info($this->ses->user);
                 }
                 catch(\Exception $e) {
-                    \error_message($e->getMessage());
+                    error_message($e->getMessage());
                     return;
                 }
                 if($user_info && $this->check_password($user_info['pwd'], $opwd))
@@ -91,7 +91,7 @@ namespace GalClash {
         public function form()
         {
             if($this->ses->c_pwd)
-                \warning_message("Bitte Passwort ändern");
+                warning_message("Bitte Passwort ändern");
 ?>
             <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
                 <fieldset>

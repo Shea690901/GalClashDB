@@ -168,7 +168,7 @@ function put_admin_forms()
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
     if($sth->rowCount() > 0)
     {
@@ -212,7 +212,7 @@ function put_admin_forms()
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
     if($sth->rowCount() > 0)
     {
@@ -262,7 +262,7 @@ function put_admin_forms()
             $sth->execute();
         }
         catch(PDOException $e) {
-            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         }
         if($sth->rowCount() > 0)
         {
@@ -312,7 +312,7 @@ function put_admin_forms()
             $sth->execute();
         }
         catch(PDOException $e) {
-            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         }
         if($sth->rowCount() > 0)
         {
@@ -362,7 +362,7 @@ function put_admin_forms()
             $sth->execute();
         }
         catch(PDOException $e) {
-            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         }
         if($sth->rowCount() > 0)
         {
@@ -429,7 +429,7 @@ function put_admin_forms()
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
     if($sth->rowCount() > 0)
     {
@@ -636,7 +636,7 @@ function overview($gal, $sys)
         $sth->execute($arg);
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return NULL;
     }
     return $sth;
@@ -668,7 +668,7 @@ function suche($spieler, $name, $exact)
         $sth->execute(array($name));
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return NULL;
     }
     return $sth;
@@ -694,7 +694,7 @@ function display_uebersicht($ansicht, $allianz)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return;
     }
     $result = $sth->fetchAll(PDO::FETCH_OBJ);
@@ -813,7 +813,7 @@ function get_allianz($dbh, $user)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return NULL;
     }
     if($sth->rowCount() == 1)
@@ -832,7 +832,7 @@ function get_allianz_id($dbh, $allianz)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
     if($sth->rowCount() == 1)
@@ -851,7 +851,7 @@ function add_allianz($dbh, $allianz)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
     try {
@@ -870,7 +870,7 @@ function get_spieler_id($dbh, $name)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
     if($sth->rowCount() == 1)
@@ -890,7 +890,7 @@ function add_spieler($dbh, $name, $a_id)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
     try {
@@ -909,7 +909,7 @@ function get_member_id($dbh, $name)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
     if($sth->rowCount() == 1)
@@ -929,7 +929,7 @@ function update_spieler($dbh, $s_id, $a_id)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
 }
@@ -945,7 +945,7 @@ function add_coords($dbh, $gal, $sys, $pla, $s_id)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
 }
@@ -959,7 +959,7 @@ function update_coords($dbh, $c_id, $s_id)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         throw new Exception("rollback", 1);
     }
 }
@@ -976,12 +976,12 @@ function neue_kolonie($arg)
     $pla        = (int) $arg->planet;
     if($spieler == "-")
     {
-        error_message("'-' als Spielername ist unzulässig!");
+        \GalClash\error_message("'-' als Spielername ist unzulässig!");
         return 0;
     }
     if(($spieler == "") || ($allianz == ""))
     {
-        error_message("Spielername und Allianz müssen angegeben werden!");
+        \GalClash\error_message("Spielername und Allianz müssen angegeben werden!");
         return 0;
     }
 
@@ -994,7 +994,7 @@ function neue_kolonie($arg)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return;
     }
     if($sth->rowCount() == 1)
@@ -1002,11 +1002,11 @@ function neue_kolonie($arg)
         $row = $sth->fetch(PDO::FETCH_OBJ);
         if(($row->name == $spieler) && ($row->allianz == $allianz))
         {
-            error_message("Kolonie bereits eingetragen");
+            \GalClash\error_message("Kolonie bereits eingetragen");
         }
         else
         {
-            error_message("Kolonie bereits eingetragen für anderen Spieler / andere Allianz! Bitte Allianzleiter informieren!");
+            \GalClash\error_message("Kolonie bereits eingetragen für anderen Spieler / andere Allianz! Bitte Allianzleiter informieren!");
             $sth->execute();
             display_result($sth);
             printf("<hr />");
@@ -1028,7 +1028,7 @@ function neue_kolonie($arg)
     }
     catch(Exception $e) {
         $dbh->rollBack();
-        error_message("Konnte Daten nicht eintragen...");
+        \GalClash\error_message("Konnte Daten nicht eintragen...");
     }
 }
 
@@ -1045,12 +1045,12 @@ function remove_kolonie($arg)
 
     if($spieler == "-")
     {
-        error_message("'-' als Spielername ist unzulässig!");
+        \GalClash\error_message("'-' als Spielername ist unzulässig!");
         return 0;
     }
     if(($spieler == "") || ($allianz == ""))
     {
-        error_message("Spielername und Allianz müssen angegeben werden!");
+        \GalClash\error_message("Spielername und Allianz müssen angegeben werden!");
         return 0;
     }
 
@@ -1063,7 +1063,7 @@ function remove_kolonie($arg)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return;
     }
     if($sth->rowCount() == 1)
@@ -1079,20 +1079,20 @@ function remove_kolonie($arg)
                 $sth1->execute();
             }
             catch(PDOException $e) {
-                error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
                 return;
             }
         }
         else                                                                /* aber anderer Besitzer */
         {
-            error_message("Kolonie ist für anderen Spieler / andere Allianz eingetragen! Bitte vor dem Löschen überprüfen!");
+            \GalClash\error_message("Kolonie ist für anderen Spieler / andere Allianz eingetragen! Bitte vor dem Löschen überprüfen!");
             $sth->execute();
             display_result($sth);
             printf("<hr />");
         }
         return;
     }
-    error_message("Kolonie nicht gefunden!");
+    \GalClash\error_message("Kolonie nicht gefunden!");
 }
 
 function get_admin_status($dbh, $user)
@@ -1103,7 +1103,7 @@ function get_admin_status($dbh, $user)
             $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
     return ($row->admin == "1");
@@ -1117,7 +1117,7 @@ function get_leiter_status($dbh, $user)
             $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
     return ($row->leiter == "1");
@@ -1131,7 +1131,7 @@ function get_change_password($dbh, $user)
             $row = $stmt->fetch(PDO::FETCH_OBJ);
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return FALSE;
     }
     return ($row->c_pwd == "1");
@@ -1168,7 +1168,7 @@ function update_urlaub($datum)
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
 }
 
@@ -1185,17 +1185,17 @@ function neues_mitglied()
 
     if(strlen($allianz) == 0)
     {
-        error_message("Nicht schummeln....");
+        \GalClash\error_message("Nicht schummeln....");
         return 0;
     }
     if(strlen($name) == 0)
     {
-        error_message("Name muss angegeben sein!");
+        \GalClash\error_message("Name muss angegeben sein!");
         return 0;
     }
     if($name == "-")
     {
-        error_message("'-' als Name ist unzulässig!");
+        \GalClash\error_message("'-' als Name ist unzulässig!");
         return 0;
     }
     if(strlen($pwd) > 0)
@@ -1232,7 +1232,7 @@ function neues_mitglied()
     }
     catch(PDOException $e) {
         $dbh->rollBack();
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
 }
 
@@ -1248,7 +1248,7 @@ function admin_mitglied()
     $m_id = get_member_id($dbh, $name);
     if($m_id == -1)
     {
-        error_message("Mitglied nicht gefunden");
+        \GalClash\error_message("Mitglied nicht gefunden");
         return 0;
     }
 
@@ -1259,7 +1259,7 @@ function admin_mitglied()
         $sth->execute();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
     return 0;
 }
@@ -1275,14 +1275,14 @@ function loesche_mitglied()
     $m_id = get_member_id($dbh, $name);
     if($m_id == -1)
     {
-        error_message("Mitglied nicht gefunden");
+        \GalClash\error_message("Mitglied nicht gefunden");
         return 0;
     }
 
     $s_id = get_spieler_id($dbh, $name);
     if($s_id == -1)
     {
-        error_message("Spieler nicht gefunden");
+        \GalClash\error_message("Spieler nicht gefunden");
         return 0;
     }
 
@@ -1299,7 +1299,7 @@ function loesche_mitglied()
         $dbh->commit();
     }
     catch(PDOException $e) {
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
     return 0;
 }
@@ -1318,7 +1318,7 @@ function sperre_mitglied()
     $m_id = get_member_id($dbh, $name);
     if($m_id == -1)
     {
-        error_message("Mitglied nicht gefunden");
+        \GalClash\error_message("Mitglied nicht gefunden");
         return 0;
     }
 
@@ -1328,7 +1328,7 @@ function sperre_mitglied()
             $b_id = get_spieler_id($dbh, $session->user);
             if($b_id == -1)
             {
-                error_message("Leiter nicht gefunden");
+                \GalClash\error_message("Leiter nicht gefunden");
                 return 0;
             }
 
@@ -1339,14 +1339,14 @@ function sperre_mitglied()
                 $sth->execute();
             }
             catch(PDOException $e) {
-                error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
             }
             break;
         case "-":
             $sth = $dbh->prepare("UPDATE user_pwd SET b_id = 1 WHERE m_id = :m_id");
             if($m_id == -1)
             {
-                error_message("Mitglied nicht gefunden");
+                \GalClash\error_message("Mitglied nicht gefunden");
                 return 0;
             }
             try {
@@ -1354,7 +1354,7 @@ function sperre_mitglied()
                 $sth->execute();
             }
             catch(PDOException $e) {
-                error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
             }
             break;
     }
@@ -1371,17 +1371,17 @@ function neue_allianz()
 
     if(strlen($allianz) == 0)
     {
-        error_message("Allianzname muss angegeben sein!");
+        \GalClash\error_message("Allianzname muss angegeben sein!");
         return 0;
     }
     if(strlen($name) == 0)
     {
-        error_message("Kein Allianzleiter angegeben!");
+        \GalClash\error_message("Kein Allianzleiter angegeben!");
         return 0;
     }
     if(($name == "-") || ($allianz == "-"))
     {
-        error_message("'-' als Name ist unzulässig!");
+        \GalClash\error_message("'-' als Name ist unzulässig!");
         return 0;
     }
     if(strlen($pwd) > 0)
@@ -1447,7 +1447,7 @@ function neue_allianz()
     }
     catch(PDOException $e) {
         $dbh->rollBack();
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
 }
 
@@ -1461,19 +1461,19 @@ function entferne_allianz()
 
     if(strlen($allianz) == 0)
     {
-        error_message("Allianzname muss angegeben sein!");
+        \GalClash\error_message("Allianzname muss angegeben sein!");
         return 0;
     }
     if($allianz == "-")
     {
-        error_message("'-' als Name ist unzulässig!");
+        \GalClash\error_message("'-' als Name ist unzulässig!");
         return 0;
     }
     $a_id = get_allianz_id($dbh, $allianz);
 
     if($a_id == -1)
     {
-        error_message(sprintf("'%s' ist kein Mitglied der Gruppe!", $allianz));
+        \GalClash\error_message(sprintf("'%s' ist kein Mitglied der Gruppe!", $allianz));
         return 0;
     }
 
@@ -1492,7 +1492,7 @@ function entferne_allianz()
     }
     catch(PDOException $e) {
         $dbh->rollBack();
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
 }
 
@@ -1508,23 +1508,23 @@ function namens_aenderung()
 
     if(($oname == "-") || ($nname == "-"))
     {
-        error_message("'-' als Name ist unzulässig!");
+        \GalClash\error_message("'-' als Name ist unzulässig!");
         return 0;
     }
     if(($oname == "") || ($nname == ""))
     {
-        error_message("Alter oder neuer Name ist leer!");
+        \GalClash\error_message("Alter oder neuer Name ist leer!");
         return;
     }
     if($nname == $oname)
     {
-        error_message("Alter und neuer Name sind identisch!");
+        \GalClash\error_message("Alter und neuer Name sind identisch!");
         return;
     }
     $o_s_id = get_spieler_id($dbh, $oname);
     if($o_s_id == -1)
     {
-        error_message(sprintf("Spieler '%s' nicht gefunden...", $oname));
+        \GalClash\error_message(sprintf("Spieler '%s' nicht gefunden...", $oname));
         return 0;
     }
 
@@ -1539,7 +1539,7 @@ function namens_aenderung()
             $sth->execute();
         }
         catch(PDOException $e) {
-            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         }
         return 0;
     }
@@ -1565,7 +1565,7 @@ function namens_aenderung()
     }
     catch(PDOException $e) {
         $dbh->rollBackk();
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return 1;
     }
     return 0;
@@ -1583,23 +1583,23 @@ function allianz_aenderung()
 
     if(($oallianz == "-") || ($nallianz == "-"))
     {
-        error_message("'-' als Name ist unzulässig!");
+        \GalClash\error_message("'-' als Name ist unzulässig!");
         return 0;
     }
     if(($oallianz == "") || ($nallianz == ""))
     {
-        error_message("Alter oder neuer Name ist leer!");
+        \GalClash\error_message("Alter oder neuer Name ist leer!");
         return 0;
     }
     if($nallianz == $oallianz)
     {
-        error_message("Alter und neuer Name sind identisch!");
+        \GalClash\error_message("Alter und neuer Name sind identisch!");
         return 0;
     }
     $o_a_id = get_allianz_id($dbh, $oallianz);
     if($o_a_id == -1)
     {
-        error_message(sprintf("Allianz '%s' nicht gefunden...", $oallianz));
+        \GalClash\error_message(sprintf("Allianz '%s' nicht gefunden...", $oallianz));
         return 0;
     }
 
@@ -1614,7 +1614,7 @@ function allianz_aenderung()
             $sth->execute();
         }
         catch(PDOException $e) {
-            error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         }
         return 0;
     }
@@ -1640,7 +1640,7 @@ function allianz_aenderung()
     }
     catch(PDOException $e) {
         $dbh->rollBack();
-        error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return 2;
     }
     return 0;
@@ -1658,17 +1658,17 @@ function allianz_aenderung()
         foreach($early_errors as $key => $value)
         {
             if($value !== NULL)
-                error_message(sprintf('Fehler bei Verbindungsaufbau zur Datenbank:<br />%s', $value->getMessage()));
+                \GalClash\error_message(sprintf('Fehler bei Verbindungsaufbau zur Datenbank:<br />%s', $value->getMessage()));
         }
     }
     if(!isset($session))                // Ups… without a session we have a problem…
     {
-        error_message('Session konnte nicht initialisiert werden!');
+        \GalClash\error_message('Session konnte nicht initialisiert werden!');
     }
     else if(!$session->is_logged_in())  // We he a session, but it's not logged in yet
     {
         if(is_null($login_ret))         // this try went wrong…
-            error_message("Falscher Benutzername oder falsches Passwort!");
+            \GalClash\error_message("Falscher Benutzername oder falsches Passwort!");
 
         $session->login_form();
     }
@@ -1728,7 +1728,7 @@ function allianz_aenderung()
                     else if($request->galaxy != 0)
                         $ret = overview($request->galaxy, $request->system);
                     else
-                        error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
+                        \GalClash\error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
                     if(isset($ret) && $ret->rowCount() > 0)
                     {
                         print("<div id=\"search_res\">");
@@ -1737,7 +1737,7 @@ function allianz_aenderung()
                     }
                     else
                     {
-                        error_message("Nichts gefunden.");
+                        \GalClash\error_message("Nichts gefunden.");
                         $a = "";
                     }
                     if(!$request->exact)
@@ -1751,7 +1751,7 @@ function allianz_aenderung()
                     else
                     {
                         if(!isset($request->force))
-                            error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
+                            \GalClash\error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
                         else
                             remove_kolonie($request);
                     }
@@ -1761,7 +1761,7 @@ function allianz_aenderung()
                     put_add_form($request->spieler, $request->allianz);
                     break;
                 default:
-                    error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
+                    \GalClash\error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
             }
         }
     }
