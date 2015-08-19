@@ -87,36 +87,17 @@ namespace GalClash {
 
         public function is_logged_in()
         {
-            return $this->logged_in;
+            return $this->is_valid() ? $this->logged_in : FALSE;
         }
 
         public function is_admin()
         {
-            return $this->admin;
+            return $this->is_valid() ? $this->admin : FALSE;
         }
 
         public function is_leiter()
         {
-            return $this->leiter;
-        }
-
-        public function check_password($crypted, $pwd)
-        {
-            if($_SERVER['SERVER_ADDR'] == '127.0.0.1')
-            {
-                $info = password_get_info($crypted);
-                if($info['algo'])
-                {
-                    if(password_verify($pwd, $crypted))
-                        return (password_needs_rehash($crypted, PASSWORD_DEFAULT)) ? 2 : 1;
-                    else
-                        return 0;
-                }
-                else
-                    return ($crypted == sha1($pwd)) ? 2 : ($crypted == '') ? 1 : 0;
-            }
-            else
-                return ($crypted == sha1($pwd)) ? 1 : ($crypted == '') ? 1 : 0;
+            return $this->is_valid() ? $this->leiter : FALSE;
         }
 
         public function login_form()
@@ -159,5 +140,4 @@ namespace GalClash {
         }
     }
 }
-
 ?>

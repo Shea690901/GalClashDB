@@ -105,6 +105,8 @@ namespace Tiger {
 
         public function destroy()
         {
+            if(!$this->is_valid())  // only when valid session…
+                return;
             $_SESSION = array();
             if(ini_get("session.use_cookies"))
             {
