@@ -61,12 +61,12 @@ namespace GalClash {
             return $row ? $row->pwd : FALSE;
         }
 
-        public function update_passwd($user, $pwd)
+        public function update_passwd($uid, $pwd)
         {
             $dbh  = $this->get_handle();
-            $stmt = $dbh->prepare('CALL `P_update_passwd`(:user, :pwd)');
+            $stmt = $dbh->prepare('CALL `P_update_passwd`(:uid, :pwd)');
             try {
-                $stmt->bindParam(':user', $user);
+                $stmt->bindParam(':uid', $uid);
                 $stmt->bindParam(':pwd', $pwd);
                 $stmt->execute();
             }
