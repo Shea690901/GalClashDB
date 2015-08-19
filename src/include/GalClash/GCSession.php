@@ -63,11 +63,12 @@ namespace GalClash {
                     printf('<pre>%s</pre>', $e->getMessage());
                     return FALSE;
                 }
-                if($user_info && ($user_info['blocked'] == '-') && ($recrypt = $this->check_password($user_info['pwd'], $this->request_ob->pwd)))
+                if($user_info && ($user_info['blocked'] == '-') && ($recrypt = check_password($db, $user_info['uid'], $this->request_ob->pwd)))
                 {
                     if($recrypt == 2)
-                        $db->update_passwd($user, $t = password_hash($this->request_ob->pwd, PASSWORD_DEFAULT));
+                        update_passwd($uid, $this->request_ob->pwd);
                     $this->user     = $user;
+                    $this->uid      = $user_info['uid'];
                     $this->allianz  = $user_info['allianz'];
                     $this->admin    = $user_info['admin'];
                     $this->leiter   = $user_info['leiter'];

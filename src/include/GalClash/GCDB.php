@@ -15,7 +15,7 @@ namespace GalClash {
         public function get_user_info($user)
         {
             $dbh  = $this->get_handle();
-            $stmt = $dbh->prepare('SELECT `pwd`, `allianz`, `leiter`, `admin`, `c_pwd`, `blocked` FROM `V_user` NATURAL JOIN `allianzen` WHERE `name` = :user');
+            $stmt = $dbh->prepare('SELECT `m_id`, `allianz`, `leiter`, `admin`, `c_pwd`, `blocked` FROM `V_user` NATURAL JOIN `allianzen` WHERE `name` = :user');
             try {
                 $stmt->bindParam(':user', $user);
                 $stmt->execute();
@@ -31,13 +31,34 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             return $row ? array(
-                    'pwd' => $row->pwd,
+                    'uid' => $row->m_id,
                     'allianz' => $row->allianz,
                     'leiter' => $row->leiter,
                     'admin' => $row->admin,
                     'c_pwd' => $row->c_pwd,
                     'blocked' => $row->blocked
                     ) : FALSE;
+        }
+
+        public function get_pwd_entry($uid)
+        {
+            $dbh  = $this->get_handle();
+            $stmt = $dbh->prepare('SELECT `pwd` FROM `V_user` WHERE `m_id` = :uid');
+            try {
+                $stmt->bindParam(':uid', $uid);
+                $stmt->execute();
+                $row = $stmt->fetch();
+            }
+            catch(PDOException $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+            }
+            return $row ? $row->pwd : FALSE;
         }
 
         public function update_passwd($user, $pwd)

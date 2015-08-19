@@ -46,99 +46,10 @@ namespace {
         function debug_output() {}
     }
 
-    function message($msg, $type, $close = FALSE)
-    {
-        global $session;
-
-        printf('<div class="alert alert-%s">', $type);
-        if($close && isset($session) && $session->use_java())
-            printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
-        printf('%s</div>', $msg);
-    }
-
-    function success_message($msg)
-    {
-        message($msg, 'success', TRUE);
-    }
-
-    function info_message($msg)
-    {
-        message($msg, 'info', TRUE);
-    }
-
-    function warning_message($msg)
-    {
-        message($msg, 'warning');
-    }
-
-    function error_message($msg)
-    {
-        message($msg, 'danger');
-    }
-
     /*
-    ** compatibily layer for php 5.5 password-hashing-functions
+    ** Commonfunctions for application and autoloader
     */
-    require_once 'include/password.php';
-
-    /*
-    ** base class (with autoloader) for the used library
-    ** and the application classes
-    */
-    require_once 'include/Tiger/Base.php';
-    $GalClash = new \Tiger\AutoLoader(\Tiger\AutoLoader::APPLICATION, 'GalClash');
-
-    error_reporting(E_ALL|E_STRICT);
-
-    /*
-    ** storage for error messages which occured before sending the page-header
-    */
-    $early_errors = array();
-
-    /*
-    ** get sanitized request variables
-    */
-    $request = new GalClash\GCRequest();
-
-    /*
-    ** connect to the database
-    */
-    try {
-        $db = new \GalClash\GCDB(DB_ENGINE, DB_HOST, DB_PORT, DB_NAME, DB_CHARSET, DB_USER, DB_PWD);
-    }
-    catch(Exception $e) {
-        $early_errors[] = $e;
-        $db             = NULL;
-    }
-
-    /*
-    ** initialize the session
-    */
-    try {
-        $session = new GalClash\GCSession($request);
-        $session->open();
-        $session->enable_java();                // <<<< delete this when ready <<<<
-    }
-    catch(Exception $e) {
-        $early_errors[] = $e;
-    }
-
-    /*
-    ** initialize css-themes
-    */
-    $themes = new \GalClash\GCThemes();
-    $themes->set_theme();
-
-    /*
-    ** login
-    */
-    $login_ret = isset($session) ? $session->login($early_errors, $db) : NULL;
-
-    /*
-    ** last chance to change session in case of errors
-    */
-    if(sizeof($early_errors) && isset($session))
-            $session->destroy();        // just to be sure…
+    require_once 'include/GalClash/GCBase.php';
 
     /*
     ** Output begins here
