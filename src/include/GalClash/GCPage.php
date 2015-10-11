@@ -5,7 +5,7 @@ namespace GalClash {
         /*
         ** __constructor
         ** prints:
-        ** - doctypedefonition
+        ** - doctypedefinition
         ** - html opening tag
         ** - head section
         ** - body opening tag
@@ -44,14 +44,16 @@ namespace GalClash {
 
         <title>α KoordinatenDB für Galactic Clash</title>
 
-        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH); ?>default.css" />
-        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH . $this->themes->get_selected()); ?>.css" />
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
             <script src="https://oss.maxcdn.com/html5shiv/last/mainfile"></script>
             <script src="https://oss.maxcdn.com/respond/last/mainfile"></script>
         <![endif]-->
+
+        <!-- css should come AFTER html5 is available -->
+        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH); ?>/default.css" />
+        <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH . "/" . $this->themes->get_selected()); ?>.css" />
 <?php
             if(isset($this->ses) && $this->ses->use_java())
             {
@@ -81,6 +83,14 @@ namespace GalClash {
 
         /*
         ** header section
+        ** contains:
+        ** - title
+        ** - (optional subtitle)
+        ** - navbar
+        **   - theme select
+        **   - (optional admin button)
+        **   - profile button
+        **   - logout button
         */
         public function header()
         {
@@ -88,6 +98,10 @@ namespace GalClash {
         <header>
             <h1>KoordinatenDB für Galactic Clash</h1>
 <?php
+            /*
+            ** in case we're loggedin, we might have choosen either admin mode or user profile
+            ** both adding a subtitle
+            */
             if(isset($this->session) && $this->session->is_logged_in())
             {
                 $subtitle = $this->session->is_admin() ? "ADMINMODE" :
@@ -104,12 +118,17 @@ namespace GalClash {
             $this->themes->theme_select();
             if(isset($this->req->admin))
                 print("<input type=\"hidden\" name=\"admin\" value=\"1\" />");
-            if(isset($this->req->konto))
+            else if(isset($this->req->konto))
                 print("<input type=\"hidden\" name=\"konto\" value=\"1\" />");
 ?>
                     </form>
                 </div>
 <?php
+            /*
+            ** in case we're loggedin, we might be able to choose either admin mode or user profile
+            ** or to return from either one to main mode
+            ** and we're able to logout
+            */
             if(isset($this->ses) && $this->ses->is_logged_in())
             {
                 $this->admin_button(isset($this->req->admin));
@@ -122,6 +141,11 @@ namespace GalClash {
 <?php
         }
 
+        /*
+        ** main section
+        ** needs a start and end
+        ** contents depends on script status
+        */
         public function start_main()
         {
 ?>
@@ -138,6 +162,12 @@ namespace GalClash {
 <?php
         }
 
+        /*
+        ** footer section
+        ** contains
+        ** - contact info
+        ** - version info
+        */
         public function footer()
         {
             global $_VERSION;
@@ -149,6 +179,12 @@ namespace GalClash {
 <?php
         }
 
+
+        /*
+        ** buttons
+        ** - profile: depending on mode either switches to profile or main main mode
+        ** - admin:   depending on mode either switches to admin or main main mode
+        */
         private function profile_button($arg)
         {
 ?>
