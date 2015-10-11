@@ -56,6 +56,12 @@ namespace {
     */
     $page = new \GalClash\GCPage($request, $session, $themes);
 
+
+/*
+** from here on:
+** old code (partiell mixed with new code e.g. db-access)
+*/
+
 function put_allianz_kombinieren()
 {
     global $request;
@@ -1646,6 +1652,12 @@ function allianz_aenderung()
     return 0;
 }
 
+
+
+/*
+** from here on:
+** mixed code (old & new)
+*/
 
     debug_output();     // <<<< delete for production, together with definition up top <<<<
 
