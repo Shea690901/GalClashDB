@@ -3,10 +3,12 @@ namespace Tiger {
     class Request extends Base {
         private $var_filter;
 
-        public function __construct($init = FALSE)
+        public function __construct($filter = NULL, $init = FALSE)
         {
             parent::__construct();
-            $this->var_filter = function ($k, $v) { return TRUE; };
+            if(is_null($filter))
+                $filter = function ($k, $v) { return TRUE; };
+            $this->set_var_filter($filter);
             if($init)
                 $this->init();
         }
