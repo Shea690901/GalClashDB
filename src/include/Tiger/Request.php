@@ -7,7 +7,7 @@ namespace Tiger {
         {
             parent::__construct();
             if($init)
-                $thos->init();
+                $this->init();
         }
 
         public function init()
