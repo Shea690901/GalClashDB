@@ -81,7 +81,7 @@ namespace GalClash {
             }
         }
 
-        public function get_allianz_id($allianz)
+        public function get_ally_id($allianz)
         {
             $sth = $this->dbh->prepare("SELECT a_id FROM allianzen WHERE allianz = :allianz");
             try {
