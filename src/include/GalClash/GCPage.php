@@ -150,14 +150,12 @@ namespace GalClash {
         {
 ?>
         <main>
-            <div id="koerper">
 <?php
         }
 
         public function end_main()
         {
 ?>
-            </div>
         </main>
 <?php
         }
