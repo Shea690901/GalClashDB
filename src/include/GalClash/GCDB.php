@@ -83,7 +83,7 @@ namespace GalClash {
 
         public function get_ally_id($allianz)
         {
-            $sth = $this->dbh->prepare("SELECT a_id FROM allianzen WHERE allianz = :allianz");
+            $sth = $this->get_handle()->prepare("SELECT a_id FROM allianzen WHERE allianz = :allianz");
             try {
                 $sth->bindValue(":allianz", $allianz);
                 $sth->execute();
@@ -133,6 +133,8 @@ namespace GalClash {
 
         /*
         ** returns array of users in questioned ally
+        **
+        ** !!! omits oneself and leader of questioned ally !!!
         */
         public function get_ally_users($ally)
         {
@@ -141,14 +143,14 @@ namespace GalClash {
             {
                 $dbh = $this->get_handle();
 
-                $sth = $dbh->prepare("SELECT name, blocked FROM V_user WHERE a_id = " .
-                        "( SELECT spieler.a_id FROM spieler WHERE name = :name ) " .
+                $sth = $dbh->prepare("SELECT name, blocked FROM V_user WHERE a_id = :a_id " .
                         "AND name != :name " .
-                        "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = ( SELECT spieler.a_id FROM spieler WHERE name = :name ) )" .
+                        "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = :a_id ) " .
                         "ORDER BY name");
 
                 try {
                     $sth->bindValue(":name", $_SESSION["user"]);
+                    $sth->bindValue(":a_id", $this->get_ally_id($ally));
                     $sth->execute();
                 }
                 catch(\PDOException $e) {
@@ -161,7 +163,7 @@ namespace GalClash {
                     $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
                     foreach($rows as $row)
                     {
-                        $this->users[$ally][$row->name] = array( 'blocked' = $row->blocked );
+                        $this->users[$ally][$row->name] = array( 'blocked' => $row->blocked );
                     }
                 }
             }
