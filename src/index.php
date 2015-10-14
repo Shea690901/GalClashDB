@@ -728,69 +728,6 @@ function update_urlaub($datum)
 }
 
 
-function neues_mitglied()
-{
-    global $db;
-    global $request;
-
-    $dbh     = $db->get_handle();
-    $name    = trim($request->name);
-    $allianz = trim($request->allianz);
-    $pwd     = trim($request->pwd);
-
-    if(strlen($allianz) == 0)
-    {
-        \GalClash\error_message("Nicht schummeln....");
-        return 0;
-    }
-    if(strlen($name) == 0)
-    {
-        \GalClash\error_message("Name muss angegeben sein!");
-        return 0;
-    }
-    if($name == "-")
-    {
-        \GalClash\error_message("'-' als Name ist unzulässig!");
-        return 0;
-    }
-    if(strlen($pwd) > 0)
-        $pwd = sha1($pwd);
-
-    $s_id = get_spieler_id($dbh, $name);
-    $a_id = get_allianz_id($dbh, $allianz);
-
-    if($s_id == -1)
-        $sth1 = $dbh->prepare("INSERT INTO spieler (name, a_id) VALUES ( :name, :a_id )");
-    else
-        $sth1 = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :s_id");
-    $sth2 = $dbh->prepare("INSERT INTO user_pwd ( s_id, pwd ) VALUES ( :s_id, :pwd )");
-    try {
-        $dbh->beginTransaction();
-
-        $sth1->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        if($s_id == -1)
-        {
-            $sth1->bindValue(":name", $name);
-            $sth1->execute();
-            $s_id = get_spieler_id($dbh, $name);
-        }
-        else
-        {
-            $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-            $sth1->execute();
-        }
-        $sth2->bindValue(":pwd", $pwd);
-        $sth2->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-        $sth2->execute();
-
-        $dbh->commit();
-    }
-    catch(PDOException $e) {
-        $dbh->rollBack();
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-    }
-}
-
 function admin_mitglied()
 {
     global $db;
@@ -1212,7 +1149,6 @@ function allianz_aenderung()
 
     $page->header();
     $page->start_main();
-
 
     if(sizeof($early_errors))           // Ouch, we had some errrors
     {
