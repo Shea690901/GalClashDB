@@ -1,5 +1,9 @@
 <?php
 namespace Tiger {
+    const MinPwLength    = 10;  // minimum allowed length for password generator (should be no less than 10)
+    const MinPwDefLength = 10;  // minimum length for password generator (default, must be ≥ MinPwLength)
+    const MaxPwDefLength = 14;  // maximum length for password generator (default, should be ≥ MinPwDefLength)
+
     /*
     ** base class
     **
@@ -200,6 +204,53 @@ namespace Tiger {
             return;
         }
         throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+    }
+
+    /*
+    ** generate a random (password) string
+    **
+    ** input:
+    ** - symbols
+    **   use these symbols
+    ** - min
+    **   use no less than min symbols
+    ** - max
+    **   use no more than max symbols
+    **
+    ** output:
+    **   random string
+    */
+    function gen_password($symbols = '', $min = MinPwDefLength, $max = MaxPwDefLength)
+    {
+        if(strlen($symbols) == 0)
+            // use either default set
+            $symbols='abcdefghijklmnopqwrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ123456789_';
+        else
+            // or remove all repeated symbols
+            $symbols = count_chars($symbols, 3);
+        if(($size = strlen($symbols)) < 10)
+            // too small sets give bad passwords => forbidden
+            throw new \ErrorException(sprintf('too few symbols (%s) for password generation!', $symbols));
+        if(($syms = $min) < MinPwLength)
+            // too few choosen symbols (with repeat) give bad passwords => forbidden
+            throw new \ErrorException('too short password for password generation!');
+
+        // we have given a minimum length greater than default (or given) maximum, minimum supersedes!
+        if($min > $max)
+            $max = $min;
+
+        // minimum and maximum length differ => choose random
+        if($min != $max)
+            $syms = mt_rand($min, $max);
+
+        // generate random array
+        $size--;
+        $ret = array();
+        for($x = 0; $x < $syms; $x++)
+            $ret[] = $symbols[mt_rand(0, $size)];
+
+        // return as string
+        return implode($ret);
     }
 
     /*
