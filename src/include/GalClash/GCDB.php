@@ -132,6 +132,29 @@ namespace GalClash {
         }
 
         /*
+        ** returns leader of questioned ally as string
+        */
+        public function get_ally_leader($ally)
+        {
+            $dbh = $this->get_handle();
+
+            $sth = $dbh->prepare("SELECT name FROM spieler JOIN allianzen on leiter_id = spieler.s_id WHERE allianz = :ally");
+            try {
+                $sth->bindValue(":ally", $ally);
+                $sth->execute();
+            }
+            catch(\PDOException $e) {
+                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            }
+            if($sth->rowCount() > 0)
+            {
+                $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
+                return $rows[0]->name;
+            }
+            return '-';
+        }
+
+        /*
         ** returns array of users in questioned ally
         **
         ** !!! omits oneself and leader of questioned ally !!!
@@ -143,7 +166,7 @@ namespace GalClash {
             {
                 $dbh = $this->get_handle();
 
-                $sth = $dbh->prepare("SELECT name, blocked FROM V_user WHERE a_id = :a_id " .
+                $sth = $dbh->prepare("SELECT name, admin, blocked FROM V_user WHERE a_id = :a_id " .
                         "AND name != :name " .
                         "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = :a_id ) " .
                         "ORDER BY name");
@@ -163,7 +186,10 @@ namespace GalClash {
                     $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
                     foreach($rows as $row)
                     {
-                        $this->users[$ally][$row->name] = array( 'blocked' => $row->blocked );
+                        $this->users[$ally][$row->name] = array(
+                                'admin'   => $row->admin,
+                                'blocked' => $row->blocked,
+                                );
                     }
                 }
             }
