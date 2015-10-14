@@ -278,6 +278,16 @@ td, th {
     border:solid thin red;
 }
 
+#admin_ally_overview {
+    width:50%;
+    border:solid thin red;
+}
+
+#admin_member_forms {
+    width:50%;
+    border:solid thin green;
+}
+
 /* Ausgaben */
 
 #search_res {                       /* gefundene kolonien */
