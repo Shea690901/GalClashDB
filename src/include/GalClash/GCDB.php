@@ -31,11 +31,11 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             return $row ? array(
-                    'uid' => $row->m_id,
-                    'allianz' => $row->allianz,
-                    'leiter' => $row->leiter,
-                    'admin' => $row->admin,
-                    'c_pwd' => $row->c_pwd,
+                    'uid'     => $row->m_id,
+                    'ally'    => $row->allianz,
+                    'leader'  => $row->leiter,
+                    'admin'   => $row->admin,
+                    'c_pwd'   => $row->c_pwd,
                     'blocked' => $row->blocked
                     ) : FALSE;
         }
@@ -129,6 +129,43 @@ namespace GalClash {
                 }
             }
             return $this->ally_group;
+        }
+
+        /*
+        ** returns array of users in questioned ally
+        */
+        public function get_ally_users($ally)
+        {
+            /* we weren't called with this argument yet */
+            if(!isset($this->users[$ally]))
+            {
+                $dbh = $this->get_handle();
+
+                $sth = $dbh->prepare("SELECT name, blocked FROM V_user WHERE a_id = " .
+                        "( SELECT spieler.a_id FROM spieler WHERE name = :name ) " .
+                        "AND name != :name " .
+                        "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = ( SELECT spieler.a_id FROM spieler WHERE name = :name ) )" .
+                        "ORDER BY name");
+
+                try {
+                    $sth->bindValue(":name", $_SESSION["user"]);
+                    $sth->execute();
+                }
+                catch(\PDOException $e) {
+                    \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                }
+
+                $this->users[$ally] = [];
+                if($sth->rowCount() > 0)
+                {
+                    $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
+                    foreach($rows as $row)
+                    {
+                        $this->users[$ally][$row->name] = array( 'blocked' = $row->blocked );
+                    }
+                }
+            }
+            return $this->users[$ally];
         }
     }
 }

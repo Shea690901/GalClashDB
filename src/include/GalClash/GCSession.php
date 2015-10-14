@@ -67,12 +67,12 @@ namespace GalClash {
                 {
                     if($recrypt == 2)
                         update_passwd($uid, $this->request_ob->pwd);
-                    $this->user     = $user;
-                    $this->uid      = $user_info['uid'];
-                    $this->allianz  = $user_info['allianz'];
-                    $this->admin    = $user_info['admin'];
-                    $this->leiter   = $user_info['leiter'];
-                    $this->c_pwd    = $user_info['c_pwd'];
+                    $this->user   = $user;
+                    $this->uid    = $user_info['uid'];
+                    $this->ally   = $user_info['ally'];
+                    $this->admin  = $user_info['admin'];
+                    $this->leader = $user_info['leader'];
+                    $this->c_pwd  = $user_info['c_pwd'];
                 }
                 else
                 {
@@ -95,9 +95,9 @@ namespace GalClash {
             return $this->is_valid() ? $this->admin : FALSE;
         }
 
-        public function is_leiter()
+        public function is_leader()
         {
-            return $this->is_valid() ? $this->leiter : FALSE;
+            return $this->is_valid() ? $this->leader : FALSE;
         }
 
         public function login_form()
