@@ -18,9 +18,16 @@ namespace Tiger {
                 foreach($_REQUEST as $key => $val)
                 {
                     $key = htmlspecialchars($key);
-                    $val = htmlspecialchars($val);
-                    if($filter($key, $val))
-                        $this->$key = $val;
+                    if(is_string($val))
+                        $v = htmlspecialchars($val);
+                    else if(is_array($val))
+                    {
+                        $v = [];
+                        foreach($val as $a)
+                            $v[] = htmlspecialchars($a);
+                    }
+                    if($filter($key, $v))
+                        $this->$key = $v;
                 }
             }
             else
@@ -28,8 +35,15 @@ namespace Tiger {
                 foreach($_REQUEST as $key => $val)
                 {
                     $key = htmlspecialchars($key);
-                    $val = htmlspecialchars($val);
-                    $this->$key = $val;
+                    if(is_string($val))
+                        $v = htmlspecialchars($val);
+                    else if(is_array($val))
+                    {
+                        $v = [];
+                        foreach($val as $a)
+                            $v[] = htmlspecialchars($a);
+                    }
+                    $this->$key = $v;
                 }
             }
         }
