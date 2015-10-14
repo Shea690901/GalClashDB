@@ -1,50 +1,32 @@
 <?php
 namespace Tiger {
     class Request extends Base {
-        private $var_filter = NULL;
+        private $var_filter;
 
         public function __construct($init = FALSE)
         {
             parent::__construct();
+            $this->var_filter = function ($k, $v) { return TRUE; };
             if($init)
                 $this->init();
         }
 
         public function init()
         {
-            if($this->var_filter)
+            $filter = $this->var_filter;
+            foreach($_REQUEST as $key => $val)
             {
-                $filter = $this->var_filter;
-                foreach($_REQUEST as $key => $val)
+                $key = htmlspecialchars($key);
+                if(is_string($val))
+                    $v = htmlspecialchars($val);
+                else if(is_array($val))
                 {
-                    $key = htmlspecialchars($key);
-                    if(is_string($val))
-                        $v = htmlspecialchars($val);
-                    else if(is_array($val))
-                    {
-                        $v = [];
-                        foreach($val as $a)
-                            $v[] = htmlspecialchars($a);
-                    }
-                    if($filter($key, $v))
-                        $this->$key = $v;
+                    $v = [];
+                    foreach($val as $a)
+                        $v[] = htmlspecialchars($a);
                 }
-            }
-            else
-            {
-                foreach($_REQUEST as $key => $val)
-                {
-                    $key = htmlspecialchars($key);
-                    if(is_string($val))
-                        $v = htmlspecialchars($val);
-                    else if(is_array($val))
-                    {
-                        $v = [];
-                        foreach($val as $a)
-                            $v[] = htmlspecialchars($a);
-                    }
+                if($filter($key, $v))
                     $this->$key = $v;
-                }
             }
         }
 
