@@ -75,6 +75,8 @@ namespace GalClash {
                         update_passwd($uid, $this->request_ob->pwd);
                     $this->user   = $user;
                     $this->uid    = $user_info['uid'];
+                    $this->pid    = $user_info['pid'];
+                    $this->aid    = $user_info['aid'];
                     $this->ally   = $user_info['ally'];
                     $this->admin  = $user_info['admin'];
                     $this->leader = $user_info['leader'];

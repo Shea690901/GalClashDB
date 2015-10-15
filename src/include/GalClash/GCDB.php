@@ -13,8 +13,8 @@ namespace GalClash {
             $s_id = $this->get_player_id('-');
             if(($a_id == -1) || ($s_id == -1))
                 throw new Exception("Fehler in Datenbankstruktur");
-            $this->nul_ally = $a_id;
-            $this->nul_user = $s_id;
+            $this->nul_ally   = $a_id;
+            $this->nul_player = $s_id;
         }
 
         public function __destruct()
@@ -25,11 +25,11 @@ namespace GalClash {
         public function get_user_info($user)
         {
             $dbh  = $this->get_handle();
-            $stmt = $dbh->prepare('SELECT `m_id`, `allianz`, `leiter`, `admin`, `c_pwd`, `blocked` FROM `V_user` NATURAL JOIN `allianzen` WHERE `name` = :user');
+            $sth = $dbh->prepare('SELECT `m_id`, `s_id`, `a_id`, `allianz`, `leiter`, `admin`, `c_pwd`, `blocked`, `b_id`  FROM `V_user` NATURAL JOIN `allianzen` WHERE `name` = :user');
             try {
-                $stmt->bindParam(':user', $user);
-                $stmt->execute();
-                $row = $stmt->fetch();
+                $sth->bindParam(':user', $user);
+                $sth->execute();
+                $row = $sth->fetch();
             }
             catch(\Exception $e) {
                 if(\DEBUG)
@@ -42,6 +42,9 @@ namespace GalClash {
             }
             return $row ? array(
                     'uid'     => $row->m_id,
+                    'pid'     => $row->s_id,
+                    'aid'     => $row->a_id,
+                    'bid'     => $row->b_id,
                     'ally'    => $row->allianz,
                     'leader'  => $row->leiter,
                     'admin'   => $row->admin,
@@ -385,6 +388,39 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             return 0;
+        }
+
+        public function block_user($name, $from_id)
+        {
+            $dbh  = $this->get_handle();
+
+            $info = $this->get_user_info($name);
+            if($info == FALSE)
+                throw new Exception("User nicht gefunden");
+            if($info['bid'] != $this->nul_player)
+                $from_id = $this->nul_player;
+
+            $sth = $dbh->prepare("UPDATE user_pwd SET b_id = :b_id WHERE m_id = :m_id");
+            try {
+                $dbh->beginTransaction();
+
+                $sth->bindValue(":b_id", $from_id, PDO::PARAM_INT);
+                $sth->bindValue(":m_id", $info['uid'], PDO::PARAM_INT);
+                $sth->execute();
+
+                $dbh->commit();
+            }
+            catch(PDOException $e) {
+                $dbh->rollBack();
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s):\n'%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+            }
+            return;
         }
     } // class GCDB
 } // namespace GalClash
