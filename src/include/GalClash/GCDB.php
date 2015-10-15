@@ -1,12 +1,20 @@
 <?php
 namespace GalClash {
-    use \PDO;       // we make extensive use of the PDO database object
+    // we make extensive use of the PDO database object
+    use \PDO;
+    use \Exception;
 
     class GCDB extends \Tiger\DB_PDO {
 
         public function __construct($engine, $host, $port, $dbname, $charset, $user, $password)
         {
             parent::__construct($engine, $host, $port, $dbname, $charset, $user, $password);
+            $a_id = $this->get_ally_id('-');
+            $s_id = $this->get_player_id('-');
+            if(($a_id == -1) || ($s_id == -1))
+                throw new Exception("Fehler in Datenbankstruktur");
+            $this->nul_ally = $a_id;
+            $this->nul_user = $s_id;
         }
 
         public function __destruct()
@@ -23,7 +31,7 @@ namespace GalClash {
                 $stmt->execute();
                 $row = $stmt->fetch();
             }
-            catch(PDOException $e) {
+            catch(\Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -51,7 +59,7 @@ namespace GalClash {
                 $stmt->execute();
                 $row = $stmt->fetch();
             }
-            catch(PDOException $e) {
+            catch(Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -72,7 +80,7 @@ namespace GalClash {
                 $stmt->bindParam(':pwd', $pwd);
                 $stmt->execute();
             }
-            catch(PDOException $e) {
+            catch(Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -99,7 +107,7 @@ namespace GalClash {
                 $sth->bindValue(":ally", $ally);
                 $sth->execute();
             }
-            catch(PDOException $e) {
+            catch(Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -109,7 +117,7 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             if($sth->rowCount() == 1)
-                return $sth->fetch(PDO::FETCH_OBJ)->a_id;
+                return (int) $sth->fetch(PDO::FETCH_OBJ)->a_id;
             return -1;
         }
 
@@ -117,20 +125,19 @@ namespace GalClash {
         ** get_player_id
         **
         ** in:
-        ** - name: name of player tk search for
+        ** - name: name of player to search for
         **
         ** out:
-        ** returns id lf player if found, -1 otherwise
+        ** returns id of player if found, -1 otherwise
         */
         public function get_player_id($name)
         {
             $sth = $this->get_handle()->prepare("SELECT s_id FROM spieler WHERE name = :name");
             try {
-                var_dump($name);
                 $sth->bindValue(":name", $name);
                 $sth->execute();
             }
-            catch(PDOException $e) {
+            catch(Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -140,7 +147,37 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             if($sth->rowCount() == 1)
-                return $sth->fetch(PDO::FETCH_OBJ)->s_id;
+                return (int) $sth->fetch(PDO::FETCH_OBJ)->s_id;
+            return -1;
+        }
+
+        /*
+        ** get_user_id
+        **
+        ** in:
+        ** - name: name of user to search for
+        **
+        ** out:
+        ** returns id of user if found, -1 otherwise
+        */
+        public function get_user_id($name)
+        {
+            $sth = $this->get_handle()->prepare("SELECT m_id FROM V_user WHERE name = :name");
+            try {
+                $sth->bindValue(":name", $name);
+                $sth->execute();
+            }
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+            }
+            if($sth->rowCount() == 1)
+                return (int) $sth->fetch(PDO::FETCH_OBJ)->m_id;
             return -1;
         }
 
@@ -158,8 +195,14 @@ namespace GalClash {
                 try {
                     $sth->execute();
                 }
-                catch(PDOException $e) {
-                    \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                catch(Exception $e) {
+                    if(\DEBUG)
+                    {
+                        $ei = $sth->errorInfo();
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    }
+                    else
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
                 }
                 $this->ally_group = [];
                 if($sth->rowCount() > 0)
@@ -185,8 +228,14 @@ namespace GalClash {
                 $sth->bindValue(":ally", $ally);
                 $sth->execute();
             }
-            catch(PDOException $e) {
-                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             if($sth->rowCount() > 0)
             {
@@ -218,8 +267,14 @@ namespace GalClash {
                     $sth->bindValue(":a_id", $this->get_ally_id($ally));
                     $sth->execute();
                 }
-                catch(PDOException $e) {
-                    \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                catch(Exception $e) {
+                    if(\DEBUG)
+                    {
+                        $ei = $sth->errorInfo();
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    }
+                    else
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
                 }
 
                 $this->users[$ally] = [];
@@ -242,9 +297,14 @@ namespace GalClash {
         {
             $dbh  = $this->get_handle();
 
-            $s_id = $this->get_player_id($name);
             $a_id = $this->get_ally_id($ally);
+            $s_id = $this->get_player_id($name);
+            $m_id = $this->get_user_id($name);
 
+            if($m_id != -1)
+            {
+                throw new Exception("User bereits eingetragen");
+            }
             if($s_id == -1)
             {
                 $sth1 = $dbh->prepare("INSERT INTO spieler (name, a_id) VALUES ( :name, :a_id )");
@@ -275,10 +335,56 @@ namespace GalClash {
 
                 $dbh->commit();
             }
+            catch(Exception $e) {
+                $dbh->rollBack();
+                if(\DEBUG)
+                {
+                    $ei[0] = $sth1->errorInfo();
+                    $ei[1] = $sth2->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+            }
+        }
+
+        public function del_user($name)
+        {
+            $dbh  = $this->get_handle();
+
+            $m_id = $this->get_user_id($name);
+            $s_id = $this->get_player_id($name);
+
+            if($m_id == -1)
+                throw new Exception("User nicht gefunden");
+            if($s_id == -1)
+                throw new Exception("Spieler nicht gefunden");
+
+            $sth1 = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :s_id");
+            $sth2 = $dbh->prepare("DELETE FROM user_pwd WHERE m_id = :m_id");
+            try {
+                $dbh->beginTransaction();
+
+                $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
+                $sth1->bindValue(":a_id", $this->nul_ally, PDO::PARAM_INT);
+                $sth2->bindValue(":m_id", $m_id, PDO::PARAM_INT);
+                $sth1->execute();
+                $sth2->execute();
+
+                $dbh->commit();
+            }
             catch(PDOException $e) {
                 $dbh->rollBack();
-                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                if(\DEBUG)
+                {
+                    $ei[0] = $sth1->errorInfo();
+                    $ei[1] = $sth2->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
+            return 0;
         }
     } // class GCDB
 } // namespace GalClash
