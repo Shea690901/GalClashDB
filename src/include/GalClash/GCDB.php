@@ -81,11 +81,20 @@ namespace GalClash {
             }
         }
 
-        public function get_ally_id($allianz)
+        /*
+        ** get_ally_id
+        **
+        ** in:
+        ** - ally: name of ally to search for
+        **
+        ** out:
+        ** returns id of ally if found, -1 otherwise
+        */
+        public function get_ally_id($ally)
         {
-            $sth = $this->get_handle()->prepare("SELECT a_id FROM allianzen WHERE allianz = :allianz");
+            $sth = $this->get_handle()->prepare("SELECT a_id FROM allianzen WHERE allianz = :ally");
             try {
-                $sth->bindValue(":allianz", $allianz);
+                $sth->bindValue(":ally", $ally);
                 $sth->execute();
             }
             catch(\PDOException $e) {
@@ -99,6 +108,37 @@ namespace GalClash {
             }
             if($sth->rowCount() == 1)
                 return $sth->fetch(\PDO::FETCH_OBJ)->a_id;
+            return -1;
+        }
+
+        /*
+        ** get_player_id
+        **
+        ** in:
+        ** - name: name of player tk search for
+        **
+        ** out:
+        ** returns id lf player if found, -1 otherwise
+        */
+        public function get_player_id($name)
+        {
+            $sth = $this->get_handle()->prepare("SELECT s_id FROM spieler WHERE name = :name");
+            try {
+                var_dump($name);
+                $sth->bindValue(":name", $name);
+                $sth->execute();
+            }
+            catch(\PDOException $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+            }
+            if($sth->rowCount() == 1)
+                return $sth->fetch(\PDO::FETCH_OBJ)->s_id;
             return -1;
         }
 
@@ -195,7 +235,49 @@ namespace GalClash {
             }
             return $this->users[$ally];
         }
-    }
-}
 
+        public function add_user($ally, $name, $pwd)
+        {
+            $dbh  = $this->get_handle();
+
+            $s_id = $this->get_player_id($name);
+            $a_id = $this->get_ally_id($ally);
+
+            if($s_id == -1)
+            {
+                $sth1 = $dbh->prepare("INSERT INTO spieler (name, a_id) VALUES ( :name, :a_id )");
+                $sth2 = $dbh->prepare("INSERT INTO user_pwd ( s_id, pwd ) VALUES ( ( SELECT s_id FROM spieler WHERE name = :name ), :pwd )");
+            }
+            else
+            {
+                $sth1 = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :s_id");
+                $sth2 = $dbh->prepare("INSERT INTO user_pwd ( s_id, pwd ) VALUES ( :s_id, :pwd )");
+            }
+            try {
+                $dbh->beginTransaction();
+
+                $sth1->bindValue(":a_id", $a_id, \PDO::PARAM_INT);
+                $sth2->bindValue(":pwd", $pwd);
+                if($s_id == -1)
+                {
+                    $sth1->bindValue(":name", $name);
+                    $sth2->bindValue(":name", $name);
+                }
+                else
+                {
+                    $sth1->bindValue(":s_id", $s_id, \PDO::PARAM_INT);
+                    $sth2->bindValue(":s_id", $s_id, \PDO::PARAM_INT);
+                }
+                $sth1->execute();
+                $sth2->execute();
+
+                $dbh->commit();
+            }
+            catch(PDOException $e) {
+                $dbh->rollBack();
+                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            }
+        }
+    } // class GCDB
+} // namespace GalClash
 ?>
