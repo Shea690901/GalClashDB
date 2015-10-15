@@ -3,6 +3,12 @@
 - documentation
 - forms/variables cleanup
 
+bug fixes:
+- when deleting users:
+	- check crossreferences like blocked
+- when renaming players
+	- check crossreferences like is_user
+
 new features:
 - reset user passwords
 - timestamps and editor for first entries
