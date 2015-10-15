@@ -15,6 +15,8 @@ new features:
 - history for name changes and deletes
 - better overview when renaming player/alliance
 - max retry for login trys before asking for captcha
+- set leader status for alliances
+	- security: group members can be changed by it's own leaders
 
 
 as long as this version isn't ready for release:
