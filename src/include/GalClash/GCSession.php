@@ -23,6 +23,12 @@ namespace GalClash {
 
         public function login($errors, $db)
         {
+            if(is_null($db))
+            {
+                $this->logged_in = FALSE;
+                $this->destroy();
+                return FALSE;
+            }
             if(is_null($this->request_ob))
             {
                 $this->destroy();
