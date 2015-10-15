@@ -1,5 +1,7 @@
 <?php
 namespace Tiger {
+    use \PDO;       // this is an abstraction for the PDO database object
+
     class DB_PDO {
         private $dbh;
 
@@ -14,12 +16,12 @@ namespace Tiger {
                 $this->user = $user;
             }
             $options = array(
-                \PDO::ATTR_PERSISTENT => TRUE,
-                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ,
-                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+                PDO::ATTR_PERSISTENT => TRUE,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             ); 
             try {
-                $this->dbh = new \PDO($dsn, $user, $password, $options);
+                $this->dbh = new PDO($dsn, $user, $password, $options);
             }
             catch(\Exception $e) {
                 if(DEBUG)

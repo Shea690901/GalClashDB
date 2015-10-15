@@ -1,5 +1,7 @@
 <?php
 namespace GalClash {
+    use \PDO;       // we make extensive use of the PDO database object
+
     class GCDB extends \Tiger\DB_PDO {
 
         public function __construct($engine, $host, $port, $dbname, $charset, $user, $password)
@@ -97,7 +99,7 @@ namespace GalClash {
                 $sth->bindValue(":ally", $ally);
                 $sth->execute();
             }
-            catch(\PDOException $e) {
+            catch(PDOException $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -107,7 +109,7 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             if($sth->rowCount() == 1)
-                return $sth->fetch(\PDO::FETCH_OBJ)->a_id;
+                return $sth->fetch(PDO::FETCH_OBJ)->a_id;
             return -1;
         }
 
@@ -128,7 +130,7 @@ namespace GalClash {
                 $sth->bindValue(":name", $name);
                 $sth->execute();
             }
-            catch(\PDOException $e) {
+            catch(PDOException $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -138,7 +140,7 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
             }
             if($sth->rowCount() == 1)
-                return $sth->fetch(\PDO::FETCH_OBJ)->s_id;
+                return $sth->fetch(PDO::FETCH_OBJ)->s_id;
             return -1;
         }
 
@@ -156,13 +158,13 @@ namespace GalClash {
                 try {
                     $sth->execute();
                 }
-                catch(\PDOException $e) {
+                catch(PDOException $e) {
                     \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
                 }
                 $this->ally_group = [];
                 if($sth->rowCount() > 0)
                 {
-                    $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
+                    $rows = $sth->fetchAll(PDO::FETCH_OBJ);
 
                     foreach($rows as $row)
                         $this->ally_group[] = $row->allianz;
@@ -183,12 +185,12 @@ namespace GalClash {
                 $sth->bindValue(":ally", $ally);
                 $sth->execute();
             }
-            catch(\PDOException $e) {
+            catch(PDOException $e) {
                 \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
             }
             if($sth->rowCount() > 0)
             {
-                $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
+                $rows = $sth->fetchAll(PDO::FETCH_OBJ);
                 return $rows[0]->name;
             }
             return '-';
@@ -216,14 +218,14 @@ namespace GalClash {
                     $sth->bindValue(":a_id", $this->get_ally_id($ally));
                     $sth->execute();
                 }
-                catch(\PDOException $e) {
+                catch(PDOException $e) {
                     \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
                 }
 
                 $this->users[$ally] = [];
                 if($sth->rowCount() > 0)
                 {
-                    $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
+                    $rows = $sth->fetchAll(PDO::FETCH_OBJ);
                     foreach($rows as $row)
                     {
                         $this->users[$ally][$row->name] = array(
@@ -256,7 +258,7 @@ namespace GalClash {
             try {
                 $dbh->beginTransaction();
 
-                $sth1->bindValue(":a_id", $a_id, \PDO::PARAM_INT);
+                $sth1->bindValue(":a_id", $a_id, PDO::PARAM_INT);
                 $sth2->bindValue(":pwd", $pwd);
                 if($s_id == -1)
                 {
@@ -265,8 +267,8 @@ namespace GalClash {
                 }
                 else
                 {
-                    $sth1->bindValue(":s_id", $s_id, \PDO::PARAM_INT);
-                    $sth2->bindValue(":s_id", $s_id, \PDO::PARAM_INT);
+                    $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
+                    $sth2->bindValue(":s_id", $s_id, PDO::PARAM_INT);
                 }
                 $sth1->execute();
                 $sth2->execute();
