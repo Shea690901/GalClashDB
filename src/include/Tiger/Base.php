@@ -197,7 +197,14 @@ namespace Tiger {
     */
     function exception_error_handler($errno, $errstr, $errfile, $errline)
     {
-        printf("<pre>%016b %016b\n%s\n%s\n%d</pre>", $errno, error_reporting(), $errstr, $errfile, $errline);
+        if(DEBUG)
+        {
+            printf("<pre>%016b %016b\n%s\n%s\n%d\nBacktrace\n", $errno, error_reporting(), $errstr, $errfile, $errline);
+            var_dump(debug_backtrace());
+            print('</pre>');
+        }
+        else
+            printf("<pre>%016b %016b\n%s\n%s\n%d</pre>", $errno, error_reporting(), $errstr, $errfile, $errline);
         if (!(error_reporting() & $errno))
         {
             // This error code is not included in error_reporting
