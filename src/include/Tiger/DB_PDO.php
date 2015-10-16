@@ -1,6 +1,7 @@
 <?php
 namespace Tiger {
     use \PDO;       // this is an abstraction for the PDO database object
+    use \Exception;
 
     class DB_PDO {
         private $dbh;
@@ -23,7 +24,7 @@ namespace Tiger {
             try {
                 $this->dbh = new PDO($dsn, $user, $password, $options);
             }
-            catch(\Exception $e) {
+            catch(Exception $e) {
                 if(DEBUG)
                     throw new DB_Exception(DB_Exception::DB_INACCESSABLE, sprintf('Exception(%s) for "%s"', $e->getMessage(), $dsn));
                 else
