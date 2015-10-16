@@ -12,7 +12,14 @@ namespace {
     require_once 'include/Tiger/Base.php';
     $GalClash = new \Tiger\AutoLoader(\Tiger\AutoLoader::APPLICATION, 'GalClash');
 
-    error_reporting(E_ALL|E_STRICT);
+    if(DEBUG)
+    {
+        error_reporting(E_ALL|E_STRICT|E_NOTICE|E_DEPRECATED);
+    }
+    else
+    {
+        error_reporting(E_ALL);
+    }
 
     /*
     ** storage for error messages which occured before sending the page-header
