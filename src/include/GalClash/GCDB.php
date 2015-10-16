@@ -355,7 +355,7 @@ namespace GalClash {
             $u_id = $this->get_user_id($leader);
 
             $sth1 = $dbh->prepare("INSERT INTO blacklisted ( a_id ) VALUES ( :a_id )");
-            $sth2 = $dbh->prepare("INSERT INTO user_pwd ( s_id ) SELECT s_id FROM spieler " .
+            $sth2 = $dbh->prepare("INSERT INTO user_pwd ( s_id, b_id ) SELECT s_id, :p_id FROM spieler " .
                     "WHERE a_id = :a_id AND NOT EXISTS ( SELECT 1 FROM user_pwd WHERE user_pwd.s_id  = spieler.s_id )");
 
             try {
@@ -365,10 +365,12 @@ namespace GalClash {
                     $a_id = $this->new_ally($ally);
                 if($u_id == -1)
                     $this->add_user($ally, $leader, $pwd, FALSE);
-                $this->change_leader($a_id, $this->get_player_id($leader));
+                $p_id = $this->get_player_id($leader);
+                $this->change_leader($a_id, $p_id);
 
                 $sth1->bindValue(":a_id", $a_id, PDO::PARAM_INT);
                 $sth2->bindValue(":a_id", $a_id, PDO::PARAM_INT);
+                $sth2->bindValue(":p_id", $p_id, PDO::PARAM_INT);
                 $sth1->execute();
                 $sth2->execute();
 
