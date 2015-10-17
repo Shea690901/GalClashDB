@@ -100,7 +100,7 @@ namespace GalClash {
 
         public function is_admin()
         {
-            return $this->is_valid() ? $this->admin : FALSE;
+            return $this->is_valid() ? ($this->admin || $this->is_leader()) : FALSE;
         }
 
         public function is_leader()
