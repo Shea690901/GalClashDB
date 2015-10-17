@@ -288,8 +288,38 @@ namespace GalClash {
             return '-';
         }
 
-        public function get_ally_players($a_id)
+        public function get_ally_players($ally)
         {
+            /* we weren't called with this argument yet */
+            if(!isset($this->players[$ally]))
+            {
+                $dbh = $this->get_handle();
+
+                $sth = $dbh->prepare("SELECT `name` FROM `spieler` WHERE `a_id` = :a_id ORDER BY `name`");
+
+                try {
+                    $sth->bindValue(":a_id", $this->get_ally_id($ally));
+                    $sth->execute();
+                }
+                catch(Exception $e) {
+                    if(\DEBUG)
+                    {
+                        $ei = $sth->errorInfo();
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    }
+                    else
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+                }
+
+                $this->players[$ally] = [];
+                if($sth->rowCount() > 0)
+                {
+                    $rows = $sth->fetchAll(PDO::FETCH_OBJ);
+                    foreach($rows as $row)
+                        $this->users[$ally][] = $row->name;
+                }
+            }
+            return $this->users[$ally];
         }
 
         /*
@@ -479,9 +509,32 @@ namespace GalClash {
 
         public function del_ally($ally)
         {
+            $dbh = $this->get_handle();
             $a_id = $this->get_ally_id($ally);
 
-            $sth = $this->get_handle()->prepare("DELETE FROM `blacklisted` WHERE `a_id` = :a_id");
+            $sth = $dbh->prepare("DELETE FROM `blacklisted` WHERE `a_id` = :a_id");
+            try {
+                $dbh->beginTransaction();
+
+                $players = $this->get_ally_players($ally);
+                foreach($players as $name)
+                    $this->del_user($name, FALSE);  // do normal del_user without change ally…
+                $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
+                $sth->execute();
+
+                $dbh->commit();
+            }
+            catch(Exception $e) {
+                $dbh->rollBack();
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+            return count($players);
         }
 
         /*
@@ -529,22 +582,23 @@ namespace GalClash {
             return $u_id;
         }
 
-        public function del_user($name, $trans = TRUE)
+        public function del_user($name, $c_ally = TRUE, $trans = TRUE)
         {
             $dbh = $this->get_handle();
 
             try {
-                if($trans)
+                if($c_ally && $trans)
                     $dbh->beginTransaction();
 
                 $this->admin_user($name, 0);
-                $this->change_player_ally($this->get_player_id($name), $this->get_nul_ally());
+                if($c_ally)
+                    $this->change_player_ally($this->get_player_id($name), $this->get_nul_ally());
 
-                if($trans)
+                if($c_ally && $trans)
                     $dbh->commit();
             }
             catch(Exception $e) {
-                if($trans)
+                if($c_ally && $trans)
                     $dbh->rollBack();
                 if(\DEBUG)
                 {
