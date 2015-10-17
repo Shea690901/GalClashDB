@@ -379,25 +379,6 @@ function get_allianz($dbh, $user)
     return NULL;
 }
 
-function get_allianz_id($dbh, $allianz)
-{
-    $sth = $dbh->prepare("SELECT a_id FROM allianzen WHERE allianz = :allianz");
-    try {
-        $sth->bindValue(":allianz", $allianz);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        throw new Exception("rollback", 1);
-    }
-    if($sth->rowCount() == 1)
-    {
-        $row = $sth->fetch(PDO::FETCH_OBJ);
-        return (int) $row->a_id;
-    }
-    return -1;
-}
-
 function add_allianz($dbh, $allianz)
 {
     $sth = $dbh->prepare("INSERT INTO allianzen (allianz) VALUES ( :allianz )");
@@ -415,25 +396,6 @@ function add_allianz($dbh, $allianz)
     catch(Exception $e) {
         throw $e;
     }
-}
-
-function get_spieler_id($dbh, $name)
-{
-    $sth = $dbh->prepare("SELECT s_id FROM spieler WHERE name = :name");
-    try {
-        $sth->bindValue(":name", $name);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        throw new Exception("rollback", 1);
-    }
-    if($sth->rowCount() == 1)
-    {
-        $row = $sth->fetch(PDO::FETCH_OBJ);
-        return (int) $row->s_id;
-    }
-    return -1;
 }
 
 function add_spieler($dbh, $name, $a_id)
@@ -454,25 +416,6 @@ function add_spieler($dbh, $name, $a_id)
     catch(Exception $e) {
         throw $e;
     }
-}
-
-function get_member_id($dbh, $name)
-{
-    $sth = $dbh->prepare("SELECT m_id FROM V_user WHERE name = :name");
-    try {
-        $sth->bindValue(":name", $name);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        throw new Exception("rollback", 1);
-    }
-    if($sth->rowCount() == 1)
-    {
-        $row = $sth->fetch(PDO::FETCH_OBJ);
-        return (int) $row->m_id;
-    }
-    return -1;
 }
 
 function update_spieler($dbh, $s_id, $a_id)
@@ -650,48 +593,6 @@ function remove_kolonie($arg)
     \GalClash\error_message("Kolonie nicht gefunden!");
 }
 
-function get_admin_status($dbh, $user)
-{
-    $stmt = $dbh->prepare("SELECT admin FROM V_user WHERE name = ?");
-    try {
-        if($stmt->execute(array($user)))
-            $row = $stmt->fetch(PDO::FETCH_OBJ);
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        return FALSE;
-    }
-    return ($row->admin == "1");
-}
-
-function get_leiter_status($dbh, $user)
-{
-    $stmt = $dbh->prepare("SELECT leiter FROM V_user WHERE name = ?");
-    try {
-        if($stmt->execute(array($user)))
-            $row = $stmt->fetch(PDO::FETCH_OBJ);
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        return FALSE;
-    }
-    return ($row->leiter == "1");
-}
-
-function get_change_password($dbh, $user)
-{
-    $stmt = $dbh->prepare("SELECT c_pwd FROM V_user WHERE name = ?");
-    try {
-        if($stmt->execute(array($user)))
-            $row = $stmt->fetch(PDO::FETCH_OBJ);
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        return FALSE;
-    }
-    return ($row->c_pwd == "1");
-}
-
 function get_urlaub()
 {
     global $db;
@@ -727,171 +628,10 @@ function update_urlaub($datum)
     }
 }
 
-
-function admin_mitglied()
-{
-    global $db;
-
-    $dbh  = $db->get_handle();
-    $name = isset($request->name) ? trim($request->name) : "";
-    $func = $name[0] == "+" ? 1 : 0;
-    $name = substr($name, 1);
-
-    $m_id = get_member_id($dbh, $name);
-    if($m_id == -1)
-    {
-        \GalClash\error_message("Mitglied nicht gefunden");
-        return 0;
-    }
-
-    $sth = $dbh->prepare("UPDATE user_pwd SET admin = :admin WHERE m_id = :m_id");
-    try {
-        $sth->bindValue(":m_id", $m_id, PDO::PARAM_INT);
-        $sth->bindValue(":admin", $func, PDO::PARAM_INT);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-    }
-    return 0;
-}
-
-function loesche_mitglied()
-{
-    global $db;
-    global $request;
-
-    $dbh  = $db->get_handle();
-    $name = isset($request->name) ? trim($request->name) : "";
-
-    $m_id = get_member_id($dbh, $name);
-    if($m_id == -1)
-    {
-        \GalClash\error_message("Mitglied nicht gefunden");
-        return 0;
-    }
-
-    $s_id = get_spieler_id($dbh, $name);
-    if($s_id == -1)
-    {
-        \GalClash\error_message("Spieler nicht gefunden");
-        return 0;
-    }
-
-    $sth1 = $dbh->prepare("UPDATE spieler SET a_id = 1 WHERE s_id = :s_id");
-    $sth2 = $dbh->prepare("DELETE FROM user_pwd WHERE m_id = :m_id");
-    try {
-        $dbh->beginTransaction();
-
-        $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-        $sth2->bindValue(":m_id", $m_id, PDO::PARAM_INT);
-        $sth1->execute();
-        $sth2->execute();
-
-        $dbh->commit();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-    }
-    return 0;
-}
-
-function sperre_mitglied()
-{
-    global $db;
-    global $request;
-    global $session;
-
-    $dbh  = $db->get_handle();
-    $name = isset($request->name) ? trim($request->name) : "";
-    $func = $name[0];
-    $name = substr($name, 1);
-
-    $m_id = get_member_id($dbh, $name);
-    if($m_id == -1)
-    {
-        \GalClash\error_message("Mitglied nicht gefunden");
-        return 0;
-    }
-
-    switch($func)
-    {
-        case "+":
-            $b_id = get_spieler_id($dbh, $session->user);
-            if($b_id == -1)
-            {
-                \GalClash\error_message("Leiter nicht gefunden");
-                return 0;
-            }
-
-            $sth = $dbh->prepare("UPDATE user_pwd SET b_id = :b_id WHERE m_id = :m_id");
-            try {
-                $sth->bindValue(":m_id", $m_id, PDO::PARAM_INT);
-                $sth->bindValue(":b_id", $b_id, PDO::PARAM_INT);
-                $sth->execute();
-            }
-            catch(PDOException $e) {
-                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-            }
-            break;
-        case "-":
-            $sth = $dbh->prepare("UPDATE user_pwd SET b_id = 1 WHERE m_id = :m_id");
-            if($m_id == -1)
-            {
-                \GalClash\error_message("Mitglied nicht gefunden");
-                return 0;
-            }
-            try {
-                $sth->bindValue(":m_id", $m_id, PDO::PARAM_INT);
-                $sth->execute();
-            }
-            catch(PDOException $e) {
-                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-            }
-            break;
-    }
-    return 0;
-}
-
 function neue_allianz()
 {
-    global $db;
-
-    $dbh     = $db->get_handle();
-    $allianz = trim($request->name);
-    $name    = trim($request->name);
-
-    if(strlen($allianz) == 0)
-    {
-        \GalClash\error_message("Allianzname muss angegeben sein!");
-        return 0;
-    }
-    if(strlen($name) == 0)
-    {
-        \GalClash\error_message("Kein Allianzleiter angegeben!");
-        return 0;
-    }
-    if(($name == "-") || ($allianz == "-"))
-    {
-        \GalClash\error_message("'-' als Name ist unzulässig!");
-        return 0;
-    }
-    if(strlen($pwd) > 0)
-        $pwd = sha1($pwd);
-
-    $s_id = get_spieler_id($dbh, $name);
-    $a_id = get_allianz_id($dbh, $allianz);
-    $m_id = get_member_id($dbh, $name);
-
-    if($a_id == -1)
-        $sth1 = $dbh->prepare("INSERT INTO allianzen (allianz) VALUES ( :allianz )");
-    if($s_id == -1)
-        $sth2 = $dbh->prepare("INSERT INTO spieler (name, a_id) VALUES ( :name, :a_id )");
-    else
-        $sth2 = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :s_id");
     if($m_id == -1)
         $sth3 = $dbh->prepare("INSERT INTO user_pwd ( s_id, pwd, admin ) VALUES ( :s_id, :pwd, 1 )");
-    $sth4 = $dbh->prepare("UPDATE allianzen SET leiter_id = :s_id WHERE a_id = :a_id");
     $sth5 = $dbh->prepare("INSERT INTO blacklisted ( a_id ) VALUES ( :a_id )");
     $sth6 = $dbh->prepare("INSERT INTO user_pwd ( s_id ) SELECT s_id FROM spieler " .
             "WHERE a_id = :a_id AND NOT EXISTS ( SELECT 1 FROM user_pwd WHERE user_pwd.s_id  = spieler.s_id )");

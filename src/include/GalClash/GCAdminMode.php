@@ -1,5 +1,7 @@
 <?php
 namespace GalClash {
+    use \Exception;
+
     class GCAdminMode extends \Tiger\Base {
 
         /*
@@ -21,9 +23,6 @@ namespace GalClash {
             // first we need to know what changed, so we know what to display…
             // ret contains a mapping with all parameters needed later on
             $ret = $this->process_request();
-            print('<pre>');
-            var_dump($ret);
-            print('</pre>');
 
             foreach($ret['forms'] as $form)
             {
@@ -31,34 +30,19 @@ namespace GalClash {
                 {
                     case 'member':
                         $this->display_member_forms($ret);
+                        unset($ret['overview']);
                         break;
                     case 'allies':
                         $this->display_allies_forms($ret);
+                        unset($ret['overview']);
                         break;
                     default:
                         throw new \ErrorException('Unknown formular type!');
                         break;
                 }
-                unset($ret['overview']);
             }
         }
 
-    //        $ret = 0;
-    //        if(isset($_POST["n_name"]))
-    //            $ret = namens_aenderung();
-    //        if(isset($_POST["n_allianz"]))
-    //            $ret = allianz_aenderung();
-    //        switch($ret)
-    //        {
-    //            case 1:
-    //                put_namen_kombinieren();
-    //                break;
-    //            case 2:
-    //                put_allianz_kombinieren();
-    //                break;
-    //            default:
-    //              put_admin_forms();
-    //        }
 
         /*
         ** __destructor
@@ -135,13 +119,15 @@ namespace GalClash {
                             <tr>
                                 <td>
 <?php
-                            if(($row->name != $session->user) && ($row->name != $db->get_ally_leader($ally)))
+                            if(($row->name != $session->user) && ($row->name != ($leader = $db->get_ally_leader($ally))))
                                 printf("<input type=\"checkbox\" name=\"names[]\" value=\"%s\">%s\n", $row->name, $row->name);
                             else
                                 printf("<input type=\"checkbox\" name=\"names[]\" disabled=\"disabled\">%s\n", $row->name, $row->name);
 ?>
                                 </td>
-                                <td align="center"><?php print($row->admin == 1 ? "X" : "-"); ?></td>
+                                <td align="center"><?php print($row->admin == 1 ?
+                                        ($row->name != $leader ? "X" : 'L') :
+                                        "-"); ?></td>
                                 <td align="center"><?php $d= $row->urlaub; print($d == "0000-00-00" ?
                                         "-" :
                                         ($d == "9999-12-31" ? "unbegrenzt" : date("d.m.Y", strtotime($d)))); ?></td>
@@ -162,7 +148,14 @@ namespace GalClash {
                         {
 ?>
                             <tr>
-                                <td><?php print($row->allianz); ?></td>
+                                <td>
+<?php
+                            if($row->allianz != $session->ally)
+                                printf("<input type=\"radio\" name=\"names[]\" value=\"%s\">%s\n", $row->allianz, $row->allianz);
+                            else
+                                printf("<input type=\"radio\" name=\"names[]\" disabled=\"disabled\">%s\n", $row->allianz, $row->allianz);
+?>
+                                    </td>
                                 <td><?php print($row->anzahl); ?></td>
                             </tr>
 <?php
@@ -171,6 +164,7 @@ namespace GalClash {
 ?>
                         </tbody>
                     </table>
+                    Zeige Allianz:
                     <select name="ov_ally" id="ov_ally" size="1" />
 <?php
                 $ally_group = $db->get_ally_group();
@@ -191,6 +185,7 @@ namespace GalClash {
                     </select>
                     <input type="submit" name="overview" value="Auswahl" />
                 </fieldset>
+                <pre><?php var_dump($ally_group); ?></pre>
             </div>
 <?php
             }
@@ -198,118 +193,62 @@ namespace GalClash {
 
         private function display_allies_forms($args)
         {
-$alliance   = trim($this->request->alliance);
-$oalliance   = trim($this->request->alliance);
-$nalliance   = trim($this->request->alliance);
-$name   = trim($this->request->name);
-$oname   = trim($this->request->name);
-$nname   = trim($this->request->name);
-$dbh = $this->db->get_handle();
-$session = $this->session;
-
             $ally       = $args['ally'];
+            $ally_group = $this->db->get_ally_group();
 ?>
     <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8" class="rcontainer "> 
 <?php
             if(isset($args['overview']))
                 $this->display_overview(($ally == "-" ? 0 : 1), $ally);
+            if($this->session->is_leader())
+            {
 ?>
-        <fieldset>
-            <legend>Neue Allianz in Gruppe</legend>
-            <table border="0" cellpadding="0" cellspacing="4">
-                <tr>
-                    <td align="right"><label for="allianz">Allianz:</label></td>
-                    <td><input name="allianz" id="allianz" type="Text" size="20" maxlength="20" value="<?php print($alliance); ?>"/></td>
-                    <td align="right"><label for="name">Leiter:</label></td>
-                    <td><input name="name" id="name" type="Text" size="20" maxlength="20" value="<?php print($name); ?>"/></td>
-                </tr>
-                <tr>
-                    <td colspan="2"></td>
-                    <td align="right"><label for="pwd">Passwort:</label></td>
-                    <td><input name="pwd" id="pwd" type="Text" size="20" maxlength="20" /></td>
-                </tr>
-            </table>
-            <input type="submit" value="Eintragen" /><input type="reset" value="Abbrechen" />
-            <input name="n_gruppe" type="hidden" value="1" />
-            <input name="admin" type="hidden" value="1" />
-        </fieldset>
-    </form>
-    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-        <fieldset>
-            <legend>Allianz aus Gruppe entfernen</legend>
-            <table border="0" cellpadding="0" cellspacing="4">
-                <tr>
-                    <td><label for="allianz_ent">Allianz:</label></td>
-                    <td><select name="allianz" id="allianz_ent" size="1" />
+        <div id="admin_allies_forms">
+            <fieldset>
+                <legend>Neue Allianz in Gruppe</legend>
+                <p>Fügt eine neue Allianz den zugriffsberechtigten Allianzen hinzu<br />Die Angabe des Leiters ist zwingend!</p>
+                <table border="0" cellpadding="0" cellspacing="4">
+                    <tr>
+                        <td align="right"><label for="n_ally">Allianz:</label></td>
+                        <td><input type="text" name="n_ally" id="n_ally" size="20" maxlength="20" /></td>
+                    </tr>
+                    <tr>
+                        <td align="right"><label for="n_leader">Leiter:</label></td>
+                        <td><input type="text" name="n_leader" id="n_leader" size="20" maxlength="20" /></td>
+                    </tr>
+                    <tr>
+                        <td align="right"><label for="pwd">Passwort:</label></td>
+                        <td><input name="pwd" id="pwd" type="Text" size="20" maxlength="20" /></td>
+                    </tr>
+                </table>
+                <input type="submit" name="add_ally" value="Eintragen" />
+            </fieldset>
 <?php
-    $sth = $dbh->prepare("SELECT allianz FROM V_blacklisted");
-
-    try {
-        $sth->execute();
-    }
-    catch(\PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-    }
-    if($sth->rowCount() > 0)
-    {
-        $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
-        foreach($rows as $row)
-        {
-            if($row->allianz != $session->ally)
-                printf("<option>%s</option>", $row->allianz);
-        }
-    }
+                if($ally == '-')
+                {
 ?>
-                    </select></td>
-                </tr>
-                <tr>
-                <td>&nbsp;</td>
-                </tr>
-            </table>
-            <input type="submit" value="Löschen" /><input type="reset" value="Abbrechen" />
-            <input name="l_gruppe" type="hidden" value="1" />
-            <input name="admin" type="hidden" value="1" />
-        </fieldset>
-    </form>
-    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-        <fieldset>
-            <legend>Spielername ändern</legend>
-            <table border="0" cellpadding="0" cellspacing="4">
-                <tr>
-                    <td align="right"><label for="oname">alter Name:</label></td>
-                    <td><input name="oname" id="oname" type="text" size="20" maxlength="20" value="<?php print($oname); ?>"/></td>
-                </tr>
-                <tr>
-                    <td align="right"><label for="nname">neuer Name:</label></td>
-                    <td><input name="nname" id="nname" type="text" size="20" maxlength="20" value="<?php print($nname); ?>"/></td>
-                </tr>
-            </table>
-            <input type="submit" value="Ändern" /><input type="reset" value="Abbrechen" />
-            <input name="n_name" type="hidden" value="1" />
-            <input name="admin" type="hidden" value="1" />
-            <input name="force" type="hidden" value="0" />
-        </fieldset>
-    </form>
-    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-        <fieldset>
-            <legend>Allianzname ändern</legend>
-            <table border="0" cellpadding="0" cellspacing="4">
-                <tr>
-                    <td align="right"><label for="oallianz">alter Name:</label></td>
-                    <td><input name="oallianz" id="oallianz" type="text" size="20" maxlength="20" value="<?php print($oalliance); ?>"/></td>
-                </tr>
-                <tr>
-                    <td align="right"><label for="nallianz">neuer Name:</label></td>
-                    <td><input name="nallianz" id="nallianz" type="text" size="20" maxlength="20" value="<?php print($nalliance); ?>"/></td>
-                </tr>
-            </table>
-            <input type="submit" value="Ändern" /><input type="reset" value="Abbrechen" />
-            <input name="n_allianz" type="hidden" value="1" />
-            <input name="admin" type="hidden" value="1" />
-            <input name="force" type="hidden" value="0" />
-        </fieldset>
+            <fieldset>
+                <legend>Allianz aus Gruppe entfernen</legend>
+                <p>Löscht die markierte Allianz aus der Gruppe der zugriffsberechtigten Allianzen<br />
+                Die Angabe des Leiters dient der Sicherheitsabfrage und ist zwingend (man achte auf die Schreibweise)!</p>
+                <table border="0" cellpadding="0" cellspacing="4">
+                    <tr>
+                        <td align="right"><label for="name">Leiter:</label></td>
+                        <td><input name="name" id="name" type="Text" size="20" maxlength="20" /></td>
+                    </tr>
+                </table>
+                <input type="submit" name ="del_ally" value="Löschen" />
+            </fieldset>
+<?php
+                }
+?>
+            <input type="hidden" name="ally" value="<?php print($ally); ?>" />
+            <input type="hidden" name="admin" value="1" />
+            <input type="hidden" name="state" value="work" />
+        </div>
     </form>
 <?php
+            }
         }
 
         private function display_member_forms($args)
@@ -367,7 +306,7 @@ $session = $this->session;
                 <legend>Allianzmitglied löschen</legend>
                 <p>
                 Löscht die selektierten User<br />
-                Zur Sicherheit ist die weiter untenen befindliche Checkbox zu markieren!
+                Zur Sicherheit ist die weiter untenen befindliche Sicherheitsabfrage zu bejahen!
                 </p>
                 <input type="submit" name="del_user" value="Löschen" />
             </fieldset>
@@ -382,28 +321,8 @@ $session = $this->session;
 ?>
             <fieldset>
                 <legend>Adminrechte geben/löschen</legend>
-                <table border="0" cellpadding="0" cellspacing="4">
-                    <tr>
-                        <td align="right"><label for="name">Name:</label></td>
-                        <td>
-                            <select name="name" id="name" size="1" />
-<?php
-                    printf("<option value=\"----\">Bitte auswählen!</option>\n");
-                    foreach($users as $user => $val)
-                    {
-                        if($val['admin'] == 1)
-                            $fmt = "<option value=\"-%s\">%s (Admin)</option>";
-                        else
-                            $fmt = "<option value=\"+%s\">%s</option>";
-                        printf($fmt, $user, $user);
-                    }
-?>
-                            </select>
-                        </td>
-                    </tr>
-                </table>
-                <input type="submit" value="Eintragen" />
-                <input name="a_user" type="hidden" value="1" />
+                <p>Gestattet bzw. verbietet für die selektierten User den Adminzugang zur Datenbank</p>
+                <input type="submit" name="admin_user" value="Eintragen" />
             </fieldset>
 <?php
                 }
@@ -412,21 +331,19 @@ $session = $this->session;
 <?php
             }
 ?>
-            <input name="ally" type="hidden" value="<?php print($ally); ?>" />
-            <input name="admin" type="hidden" value="1" />
-            <input name="state" type="hidden" value="work" />
-        </form>
-    </div>
+            <input type="hidden" name="ally" value="<?php print($ally); ?>" />
+            <input type="hidden" name="admin" value="1" />
+            <input type="hidden" name="state" value="work" />
+        </div>
+    </form>
 <?php
         }
 
         private function process_request()
         {
-            $req = $this->request;
+            $req   = $this->request;
+            $ses   = $this->session;
             $state = trim($req->state);
-            print('<pre>');
-            var_dump($req);
-            print('</pre>');
 
             // nothing really to process…
             if(isset($req->overview))
@@ -442,39 +359,98 @@ $session = $this->session;
 
             // now begins the work
 
+            $ret = array('overview' => 1, 'ally' => $req->ally);
+$ret['forms'] = array('member', 'allies');
             if(isset($req->add_user))
             {
                 $ally = trim($req->am_ally);
-                // $this->add_member();
-                $ret = array('overview' => 1, 'ally' => $ally, 'forms' => array('member', 'allies'));
+                $name = trim($req->name);
+                $pwd = trim($req->pwd);
+                $ret['ally'] = $ally;
+                $ret['forms'] = array('member', 'allies');
+                $this->add_user($ally, $name, $pwd);
+            }
+            else if(isset($req->del_user))
+            {
+                if(!isset($req->names))
+                    error_message("Keine zu löschenden User selektiert");
+                else if(!isset($req->del_security))
+                    error_message("Sicherheitsabfrage nicht bestätigt");
+                else
+                {
+                    foreach($req->names as $name)
+                        $this->del_user(trim($name));
+                }
+                $ret['ally'] = $req->ally;
+                $ret['forms'] = array('member', 'allies');
+            }
+            else if(isset($req->block_user))
+            {
+                if(!isset($req->names))
+                    error_message("Keine zu ändernden User selektiert");
+                else
+                {
+                    foreach($req->names as $name)
+                        $this->block_user(trim($name));
+                }
+                $ret['ally'] = $req->ally;
+                $ret['forms'] = array('member', 'allies');
+            }
+            else if($ses->is_leader())
+            {
+                if(isset($req->admin_user))
+                {
+                    if(!isset($req->names))
+                        error_message("Keine zu ändernden User selektiert");
+                    else
+                    {
+                        foreach($req->names as $name)
+                            $this->admin_user(trim($name));
+                    }
+                    $ret['ally'] = $req->ally;
+                    $ret['forms'] = array('member', 'allies');
+                }
+                else if(isset($req->add_ally))
+                {
+                    $ally = trim($req->n_ally);
+                    $name = trim($req->n_leader);
+                    $pwd  = trim($req->pwd);
+                    if($this->add_ally($ally, $name, $pwd) == 1)
+                    {
+                        $ret['ally'] = '-';
+                        $ret['forms'] = array('allies', 'member');
+                    }
+                    else
+                    {
+                        $ret['ally'] = $ally;
+                        $ret['forms'] = array('member', 'allies');
+                    }
+                }
+                else if(isset($req->del_ally))
+                {
+                    if(!isset($req->names))
+                        error_message("Keine zu löschende Allianz selektiert");
+                    else
+                    {
+                        $ally = trim($req->names[0]);
+                        $name = trim($req->name);
+                        if(strcmp($name, $this->db->get_ally_leader($ally)) == 0)
+                            $this->del_ally($ally);
+                        else
+                            error_message("Allianzleiter nicht angegeben oder falsch");
+                    }
+                    $ret['ally'] = '-';
+                    $ret['forms'] = array('allies', 'member');
+                }
             }
             else if(0)
             {
                 /*
-                    $this->block_member();
-                    $ret['overview'] = 1;
-                    $ret['ally'] = $ally;
-                    break;
-                case 'l_user':
-                    $this->delete_member();
-                    $ret['overview'] = 1;
-                    $ret['ally'] = $ally;
-                    break;
                 default:
                     if($this->session->is_leader() || TRUE)
                     {
                         switch($state)
                         {
-                            case 'a_user':
-                                $this->toggle_priv_level();
-                                $ret['overview'] = 1;
-                                $ret['ally'] = $ally;
-                                break;
-                            case 'n_gruppe':
-                                $this->add_alliance();
-                                $ret['overview'] = 1;
-                                $ret['ally'] = '-';
-                                break;
                             case 'l_gruppe':
                                 $this->delete_alliance();
                                 $ret['overview'] = 1;
@@ -485,79 +461,151 @@ $session = $this->session;
                         }
                         break;
                     }
-                    else
-                    {
-                        // unknown request
-                    }
                     */
             }
             return $ret;
         }
 
-        private function add_member()
+        private function add_ally($ally, $name, $pwd)
         {
-            $db       = $this->db;
-            $dbh      = $db->get_handle();
-
-            $name     = trim($this->request->name);
-            $alliance = trim($this->request->alliance);
-            $pwd      = trim($this->request->pwd);
-
-            if(strlen($alliance) == 0)
+            if(strlen($ally) == 0)
             {
-                \GalClash\error_message("Allianzzugehörigkeit unbekannt…");
-                return 0;
+                error_message("Allianzname muss angegeben sein!");
+                return 1;
             }
             if(strlen($name) == 0)
             {
-                \GalClash\error_message("Spielername muss angegeben sein!");
-                return 0;
+                error_message("Leitername muss angegeben sein!");
+                return 1;
             }
-            if(($name == "-") || ($alliance == "-"))
+            if(($ally == '-') || ($name == "-"))
             {
-                \GalClash\error_message("'-' als Spielername/Allianz ist unzulässig!");
-                return 0;
+                \GalClash\error_message("'-' als Allianz- oder Leitername ist unzulässig!");
+                return 1;
             }
             if(strlen($pwd) == 0)
                 $pwd = \Tiger\gen_password();
-            $c_pwd = sha1($pwd);
-
-            $s_id = $db->get_player_id($dbh, $name);
-            $a_id = $db->get_ally_id($dbh, $allianz);
-
-            if($s_id == -1)
-                $sth1 = $dbh->prepare("INSERT INTO spieler (name, a_id) VALUES ( :name, :a_id )");
-            else
-                $sth1 = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :s_id");
-            $sth2 = $dbh->prepare("INSERT INTO user_pwd ( s_id, pwd ) VALUES ( :s_id, :pwd )");
+            $c_pwd = password_hash($pwd, PASSWORD_DEFAULT);
             try {
-                $dbh->beginTransaction();
-
-                $sth1->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-                if($s_id == -1)
-                {
-                    $sth1->bindValue(":name", $name);
-                    $sth1->execute();
-                    $s_id = get_spieler_id($dbh, $name);
-                }
+                $ret = $this->db->add_ally($ally, $name, $c_pwd);
+                success_message($name . " erfolgreich eingetragen…");
+                if($ret == -1)
+                    message(sprintf("Initiales Passwort für %s lautet:<br />%s", $name,  $pwd), 'warning');
                 else
-                {
-                    $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-                    $sth1->execute();
-                }
-                $sth2->bindValue(":pwd", $pwd);
-                $sth2->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-                $sth2->execute();
-
-                $dbh->commit();
+                    info_message('Altes Passwort wurde beibehalten…');
             }
-            catch(PDOException $e) {
-                $dbh->rollBack();
-                \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+            catch(Exception $e) {
+                error_message($e->getMessage());
+            }
+            return 0;
+        }
+
+        private function del_ally($ally)
+        {
+            print('<pre>del_ally(');var_dump($ally);print(')</pre>');
+            try {
+                $ret = $this->db->del_ally($ally);
+                success_message(sprintf("%s erfolgreich ausgetragen.\nzusätzlich %d Mitglieder wurden gesperrt", $ally, $ret));
+            }
+            catch(Exception $e)
+            {
+                error_message($e->getMessage());
             }
         }
 
-    }
-}
+        private function add_user($ally, $name, $pwd)
+        {
+            if(strlen($name) == 0)
+            {
+                error_message("Spielername muss angegeben sein!");
+                return;
+            }
+            if($name == "-")
+            {
+                \GalClash\error_message("'-' als Spielername ist unzulässig!");
+                return;
+            }
+            if(strlen($pwd) == 0)
+                $pwd = \Tiger\gen_password();
+            $c_pwd = password_hash($pwd, PASSWORD_DEFAULT);
+            try {
+                $ret = $this->db->add_user($ally, $name, $c_pwd);
+                success_message($name . " erfolgreich eingetragen…");
+                if($ret == -1)
+                    message(sprintf('Initiales Passwort für %s lautet:<br />%s', $name, $pwd), 'info');
+                else
+                    info_message('Altes Passwort wurde beibehalten…');
+            }
+            catch(Exception $e) {
+                error_message($e->getMessage());
+            }
+        }
 
+        private function del_user($name)
+        {
+            $db = $this->db;
+
+            if(strlen($name) == 0)
+            {
+                error_message("Spielername muss angegeben sein!");
+                return;
+            }
+            if($name == "-")
+            {
+                \GalClash\error_message("'-' als Spielername ist unzulässig!");
+                return;
+            }
+            try {
+                $db->del_user($name);
+                success_message($name . " erfolgreich gelöscht…");
+            }
+            catch(Exception $e) {
+                error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+            }
+        }
+
+        private function block_user($name)
+        {
+            if(strlen($name) == 0)
+            {
+                error_message("Spielername muss angegeben sein!");
+                return;
+            }
+            if($name == "-")
+            {
+                \GalClash\error_message("'-' als Spielername ist unzulässig!");
+                return;
+            }
+            try {
+                $this->db->block_user($name, $this->session->pid);
+                success_message($name . " erfolgreich geändert…");
+            }
+            catch(Exception $e) {
+                error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+            }
+        }
+
+        private function admin_user($name)
+        {
+            if(strlen($name) == 0)
+            {
+                error_message("Spielername muss angegeben sein!");
+                return;
+            }
+            if($name == "-")
+            {
+                \GalClash\error_message("'-' als Spielername ist unzulässig!");
+                return;
+            }
+            try {
+                $this->db->admin_user($name);
+                success_message($name . " erfolgreich geändert…");
+            }
+            catch(Exception $e) {
+                error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+            }
+        }
+
+    } // class GCAdminMode
+} // namespace GalClash
 ?>
