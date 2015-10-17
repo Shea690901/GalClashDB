@@ -436,7 +436,7 @@ namespace GalClash {
             return $this->get_user_id($name);
         }
 
-        public function del_user($name)
+        public function del_user($name, $trans = TRUE, $c_ally = TRUE)
         {
             $dbh  = $this->get_handle();
 
@@ -451,18 +451,24 @@ namespace GalClash {
             $sth1 = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :s_id");
             $sth2 = $dbh->prepare("DELETE FROM user_pwd WHERE m_id = :m_id");
             try {
-                $dbh->beginTransaction();
+                if($trans)
+                    $dbh->beginTransaction();
 
-                $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-                $sth1->bindValue(":a_id", $this->nul_ally, PDO::PARAM_INT);
+                if($c_ally)
+                {
+                    $sth1->bindValue(":s_id", $s_id, PDO::PARAM_INT);
+                    $sth1->bindValue(":a_id", $this->nul_ally, PDO::PARAM_INT);
+                    $sth1->execute();
+                }
                 $sth2->bindValue(":m_id", $m_id, PDO::PARAM_INT);
-                $sth1->execute();
                 $sth2->execute();
 
-                $dbh->commit();
+                if($trans)
+                    $dbh->commit();
             }
             catch(PDOException $e) {
-                $dbh->rollBack();
+                if($trans)
+                    $dbh->rollBack();
                 if(\DEBUG)
                 {
                     $ei[0] = $sth1->errorInfo();
