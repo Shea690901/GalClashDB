@@ -271,21 +271,31 @@ td, th {
 #search_form {                      /* suchen eines spielers / einer allianz */
     width:50%;
     border:solid thin red;
+    overflow:auto;
 }
 
 #col_add_form {                     /* hinzufügen / löschen einer kolonie */
     width:50%;
     border:solid thin red;
+    overflow:auto;
 }
 
 #admin_ally_overview {
     width:50%;
     border:solid thin red;
+    overflow:auto;
+}
+
+#admin_allies_forms {
+    width:50%;
+    border:solid thin green;
+    overflow:auto;
 }
 
 #admin_member_forms {
     width:50%;
     border:solid thin green;
+    overflow:auto;
 }
 
 /* Ausgaben */

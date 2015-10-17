@@ -5,6 +5,8 @@ namespace GalClash {
     use \Exception;
 
     class GCDB extends \Tiger\DB_PDO {
+        private $nul_ally;
+        private $nul_player;
 
         public function __construct($engine, $host, $port, $dbname, $charset, $user, $password)
         {
@@ -527,6 +529,32 @@ namespace GalClash {
             return $u_id;
         }
 
+        public function del_user($name, $trans = TRUE)
+        {
+            $dbh = $this->get_handle();
+
+            try {
+                if($trans)
+                    $dbh->beginTransaction();
+
+                $this->admin_user($name, 0);
+                $this->change_player_ally($this->get_player_id($name), $this->get_nul_ally());
+
+                if($trans)
+                    $dbh->commit();
+            }
+            catch(Exception $e) {
+                if($trans)
+                    $dbh->rollBack();
+                if(\DEBUG)
+                {
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%s'", __FUNCTION__, $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+        }
+
         public function block_user($name, $from_id)
         {
             $dbh  = $this->get_handle();
@@ -560,28 +588,26 @@ namespace GalClash {
             return;
         }
 
-        public function admin_user($name)
+        public function admin_user($name, $force = -1)
         {
             $dbh  = $this->get_handle();
 
             $info = $this->get_user_info($name);
             if($info == FALSE)
                 throw new Exception("User nicht gefunden");
-            if($info['bid'] != $this->nul_player)
+            if(($info['bid'] != $this->nul_player) && ($force == -1))
                 throw new Exception("User ist gesperrt");
 
             $sth = $dbh->prepare("UPDATE user_pwd SET admin = :admin WHERE m_id = :m_id");
             try {
-                $dbh->beginTransaction();
-
-                $sth->bindValue(":admin", 1 - $info['admin'], PDO::PARAM_INT);
+                if($force == -1)
+                    $sth->bindValue(":admin", 1 - $info['admin'], PDO::PARAM_INT);
+                else
+                    $sth->bindValue(":admin", $force ? 1 : 0, PDO::PARAM_INT);
                 $sth->bindValue(":m_id", $info['uid'], PDO::PARAM_INT);
                 $sth->execute();
-
-                $dbh->commit();
             }
             catch(PDOException $e) {
-                $dbh->rollBack();
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -593,6 +619,9 @@ namespace GalClash {
             return;
         }
 
+        /*
+        ** general functions to add/change/delete players without access privileges
+        */
         public function change_player_ally($p_id, $a_id, $trans = TRUE)
         {
             $dbh = $this->get_handle();
@@ -600,19 +629,11 @@ namespace GalClash {
             $sth = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :p_id");
 
             try {
-                if($trans)
-                    $dbh->beginTransaction();
-
                 $sth->bindValue(":p_id", $p_id, PDO::PARAM_INT);
                 $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
                 $sth->execute();
-
-                if($trans)
-                    $dbh->commit();
             }
             catch(PDOException $e) {
-                if($trans)
-                    $dbh->rollBack();
                 if(\DEBUG)
                 {
                     $ei[0] = $sth1->errorInfo();
