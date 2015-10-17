@@ -35,10 +35,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             return $row ? array(
                     'uid'     => $row->m_id,
@@ -66,10 +66,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             return $row ? $row->pwd : FALSE;
         }
@@ -87,10 +87,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
         }
 
@@ -114,10 +114,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             if($sth->rowCount() == 1)
                 return (int) $sth->fetch(PDO::FETCH_OBJ)->a_id;
@@ -144,10 +144,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             if($sth->rowCount() == 1)
                 return (int) $sth->fetch(PDO::FETCH_OBJ)->s_id;
@@ -174,10 +174,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             if($sth->rowCount() == 1)
                 return (int) $sth->fetch(PDO::FETCH_OBJ)->m_id;
@@ -202,10 +202,10 @@ namespace GalClash {
                     if(\DEBUG)
                     {
                         $ei = $sth->errorInfo();
-                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                     }
                     else
-                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
                 }
                 $this->ally_group = [];
                 if($sth->rowCount() > 0)
@@ -235,10 +235,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             if($sth->rowCount() > 0)
             {
@@ -274,10 +274,10 @@ namespace GalClash {
                     if(\DEBUG)
                     {
                         $ei = $sth->errorInfo();
-                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s): '%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                     }
                     else
-                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                        throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
                 }
 
                 $this->users[$ally] = [];
@@ -304,19 +304,41 @@ namespace GalClash {
             if($this->get_ally_id($ally) != -1)
                 throw new Exception('Allianz bereits eingetragen');
 
-            $sth = $this->get_handle()->prepare("INSERT INTO `allianzen` ( `allianz` ) VALUES ( :ally )");
-            $sth->bindValue(":ally", $ally);
-            $sth->execute();
+            try {
+                $sth = $this->get_handle()->prepare("INSERT INTO `allianzen` ( `allianz` ) VALUES ( :ally )");
+                $sth->bindValue(":ally", $ally);
+                $sth->execute();
+            }
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
+            }
 
             return $this->get_ally_id($ally);
         }
 
         public function change_leader($a_id, $p_id)
         {
-            $sth = $this->get_handle()->prepare("UPDATE `allianzen` SET `leiter_id` = :p_id WHERE `a_id` = :a_id");
-            $sth->bindValue(":p_id", $p_id, PDO::PARAM_INT);
-            $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-            $sth->execute();
+            try {
+                $sth = $this->get_handle()->prepare("UPDATE `allianzen` SET `leiter_id` = :p_id WHERE `a_id` = :a_id");
+                $sth->bindValue(":p_id", $p_id, PDO::PARAM_INT);
+                $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
+                $sth->execute();
+            }
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
+            }
         }
 
         /*
@@ -327,20 +349,42 @@ namespace GalClash {
             if($this->get_player_id($name) != -1)
                 throw new Exception('Spieler bereits eingetragen');
 
-            $sth = $this->get_handle()->prepare("INSERT INTO `spieler` ( `name`, `a_id` ) VALUES ( :name, :a_id )");
-            $sth->bindValue(":name", $name);
-            $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-            $sth->execute();
+            try {
+                $sth = $this->get_handle()->prepare("INSERT INTO `spieler` ( `name`, `a_id` ) VALUES ( :name, :a_id )");
+                $sth->bindValue(":name", $name);
+                $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
+                $sth->execute();
+            }
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
+            }
 
             return $this->get_player_id($name);
         }
 
         public function change_ally($p_id, $a_id)
         {
-            $sth = $this->get_handle()->prepare("UPDATE `spieler` SET `a_id` = :a_id WHERE `s_id` = :p_id");
-            $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-            $sth->bindValue(":p_id", $p_id, PDO::PARAM_INT);
-            $sth->execute();
+            try {
+                $sth = $this->get_handle()->prepare("UPDATE `spieler` SET `a_id` = :a_id WHERE `s_id` = :p_id");
+                $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
+                $sth->bindValue(":p_id", $p_id, PDO::PARAM_INT);
+                $sth->execute();
+            }
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
+            }
         }
 
         /*
@@ -377,15 +421,15 @@ namespace GalClash {
                 $dbh->commit();
             }
             catch(Exception $e) {
-                //$dbh->rollBack();
+                $dbh->rollBack();
                 if(\DEBUG)
                 {
                     $ei[0] = $sth1->errorInfo();
                     $ei[1] = $sth2->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", __FUNCTION__, $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
             }
         }
 
@@ -428,10 +472,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s):\n'%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             return $this->get_user_id($name);
         }
@@ -473,10 +517,10 @@ namespace GalClash {
                 {
                     $ei[0] = $sth1->errorInfo();
                     $ei[1] = $sth2->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", __FUNCTION__, $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
             }
             return 0;
         }
@@ -506,10 +550,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s):\n'%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             return;
         }
@@ -539,10 +583,10 @@ namespace GalClash {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage(%s/%s/%s):\n'%s'", $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("Fehler bei Datenbankabfrage: '%d'<br />\n", $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCCTION__, $e->getCode()));
             }
             return;
         }
