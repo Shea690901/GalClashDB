@@ -12,7 +12,7 @@ CREATE PROCEDURE `IP_optimize_tables`()
 BEGIN
     DECLARE done int default FALSE;
     DECLARE t varchar(64);
-    DECLARE s varchar(64);
+    DECLARE s varchar(2);
     DECLARE c cursor FOR SELECT `TABLE_NAME` FROM `IV_tables`;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
@@ -47,149 +47,6 @@ BEGIN
     DELETE FROM `I_new_names_spieler`;
 
     COMMIT;
-END;;
-
-DROP PROCEDURE IF EXISTS `P_add_allianz`;;
-CREATE PROCEDURE `P_add_allianz`(OUT `a_id` int(11), IN `allianz` varchar(20) CHARACTER SET 'utf8')
-BEGIN
-   DECLARE s varchar(256) ;
-   DECLARE a varchar(20) ;
-
-   SET @a = trim(allianz);
-   SET @s = concat("INSERT INTO `allianzen` ( `allianz` ) VALUES ( '", @a, "' )");
-   PREPARE stm FROM @s;
-   EXECUTE stm;
-   DEALLOCATE PREPARE stm;
-
-   CALL P_get_a_id (a_id, @a) ;
-END;;
-
-DROP PROCEDURE IF EXISTS `P_add_spieler`;;
-CREATE PROCEDURE `P_add_spieler`(OUT `s_id` int(11), IN `name` varchar(20) CHARACTER SET 'utf8', IN `a_id` int(11))
-BEGIN
-   DECLARE s varchar(256) ;
-   DECLARE n varchar(20);
-
-   SET @n = trim(name);
-   SET @s = concat("INSERT INTO `spieler` ( `name`, `a_id` ) VALUES ( '", @n, "', ", a_id, ")");
-   PREPARE stm FROM @s;
-   EXECUTE stm;
-   DEALLOCATE PREPARE stm;
-   CALL P_get_s_id (s_id, name);
-END;;
-
-DROP PROCEDURE IF EXISTS `P_get_allianz`;;
-CREATE PROCEDURE `P_get_allianz`(OUT `ret` varchar(20) CHARACTER SET 'utf8', IN `name` varchar(20) CHARACTER SET 'utf8')
-BEGIN
-   DECLARE s varchar(256);
-   DECLARE tmp varchar(20);
-
-   SET @s = concat("SELECT `allianz` INTO @`tmp` FROM `allianzen` NATURAL JOIN `spieler` WHERE `name` = '", name, "'");
-
-   PREPARE stm FROM @s;
-   EXECUTE stm;
-   DEALLOCATE PREPARE stm;
-   SET ret = @tmp ;
-END;;
-
-DROP PROCEDURE IF EXISTS `P_get_a_id`;;
-CREATE PROCEDURE `P_get_a_id`(OUT `a_id` int(11), IN `allianz` varchar(20) CHARACTER SET 'utf8')
-BEGIN
-   DECLARE s varchar(256);
-   DECLARE id int;
-
-   SET @id = NULL;
-   SET @s = concat("SELECT `a_id` INTO @`id` FROM `allianzen` WHERE `allianz` = '", allianz, "'");
-
-   PREPARE stm FROM @s;
-   EXECUTE stm;
-   DEALLOCATE PREPARE stm;
-   SET a_id = @id ;
-END;;
-
-DROP PROCEDURE IF EXISTS `P_get_s_id`;;
-CREATE PROCEDURE `P_get_s_id`(OUT `s_id` int(11), IN `name` varchar(20) CHARACTER SET 'utf8')
-BEGIN
-   DECLARE s varchar(256);
-   DECLARE n varchar(20);
-   DECLARE id int;
-
-   SET @id = NULL;
-   SET @n = trim(name);
-   SET @s = concat("SELECT `s_id` INTO @`id` FROM `spieler` WHERE `name` = '", @n, "'");
-
-   PREPARE stm FROM @s;
-   EXECUTE stm;
-   DEALLOCATE PREPARE stm;
-   SET s_id = @id ;
-END;;
-
-DROP PROCEDURE IF EXISTS `P_get_user_info`;;
-CREATE PROCEDURE `P_get_user_info`(OUT `allianz` varchar(20) CHARACTER SET 'utf8', OUT `leiter` int, OUT `admin` int, OUT `c_pwd` int, IN `name` varchar(20) CHARACTER SET 'utf8')
-BEGIN
-   DECLARE s  varchar(256);
-   DECLARE t1 varchar(20);
-   DECLARE t2 int;
-   DECLARE t3 int;
-   DECLARE t4 int;
-
-   SET @s = concat("SELECT `allianz`, `leiter`, `admin`, `c_pwd` INTO @`t1`, @`t2`, @`t3`, @`t4` FROM `V_user` NATURAL JOIN `allianzen` WHERE `name` = '", name, "'");
-
-   PREPARE stm FROM @s;
-   EXECUTE stm;
-   DEALLOCATE PREPARE stm;
-   SET allianz = @t1 ;
-   SET leiter = @t2 ;
-   SET admin = @t3 ;
-   SET c_pwd = @t4 ;
-END;;
-
-DROP PROCEDURE IF EXISTS `P_set_leiter`;;
-CREATE PROCEDURE `P_set_leiter`(IN `allianz` varchar(20) CHARACTER SET 'utf8', IN `name` varchar(20) CHARACTER SET 'utf8')
-BEGIN
-   DECLARE s varchar(256);
-   DECLARE s_id int default null;
-   DECLARE a_id int default null;
-
-   START TRANSACTION;
-
-   CALL P_get_a_id (@a_id, allianz);
-   IF @a_id IS NULL THEN
-      CALL P_add_allianz (@a_id, allianz);
-   END IF;
-
-   CALL P_get_s_id (@s_id, name);
-   IF @s_id IS NULL THEN
-      CALL P_add_spieler (@s_id, name, @a_id);
-   ELSE
-      SET @s = concat("UPDATE `spieler` SET `a_id` = ", @a_id, " WHERE `s_id` = ",  @s_id);
-      PREPARE stm FROM @s;
-      EXECUTE stm;
-      DEALLOCATE PREPARE stm;
-   END IF;
-   
-   SET @s = concat("UPDATE `allianzen` SET `leiter_id` = ", @s_id, " WHERE `a_id` = ",  @a_id);
-   PREPARE stm FROM @s;
-   EXECUTE stm;
-   DEALLOCATE PREPARE stm;
-   COMMIT;
-END;;
-
-DROP PROCEDURE IF EXISTS `P_update_passwd`;;
-CREATE PROCEDURE `P_update_passwd`(IN `m_id` int, IN `pwd` varchar(256) CHARACTER SET 'utf8')
-BEGIN
-   DECLARE s varchar(256);
-   DECLARE s_id int default null;
-
-   START TRANSACTION;
-
-   l1: BEGIN
-      SET @s = concat("UPDATE `user_pwd` SET `pwd` = '", pwd, "' WHERE `m_id` = ",  @m_id);
-      PREPARE stm FROM @s;
-      EXECUTE stm;
-      DEALLOCATE PREPARE stm;
-      COMMIT;
-   END;
 END;;
 
 DROP EVENT IF EXISTS `IE_optimize_tables`;;
@@ -234,6 +91,26 @@ CREATE TABLE `coords` (
   CONSTRAINT `coords_ibfk_1` FOREIGN KEY (`s_id`) REFERENCES `spieler` (`s_id`),
   CONSTRAINT `coords_ibfk_2` FOREIGN KEY (`freigegeben`) REFERENCES `spieler` (`s_id`),
   CONSTRAINT `coords_ibfk_3` FOREIGN KEY (`farm_von`) REFERENCES `spieler` (`s_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+DROP TABLE IF EXISTS `history`;
+CREATE TABLE `history` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `type` tinyint(3) unsigned DEFAULT NULL,
+  `s_id` int(11) NOT NULL,
+  `s_id_combined` int(11) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `a_id` int(11) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `by` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `s_id` (`s_id`),
+  KEY `a_id` (`a_id`),
+  KEY `by` (`by`),
+  CONSTRAINT `history_ibfk_1` FOREIGN KEY (`s_id`) REFERENCES `spieler` (`s_id`),
+  CONSTRAINT `history_ibfk_2` FOREIGN KEY (`a_id`) REFERENCES `allianzen` (`a_id`),
+  CONSTRAINT `history_ibfk_3` FOREIGN KEY (`by`) REFERENCES `spieler` (`s_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -314,6 +191,8 @@ CREATE TABLE `spieler` (
   CONSTRAINT `spieler_ibfk_1` FOREIGN KEY (`a_id`) REFERENCES `allianzen` (`a_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+INSERT INTO `spieler` (`s_id`, `name`, `a_id`) VALUES
+(1,	'-',	1);
 
 DROP TABLE IF EXISTS `user_pwd`;
 CREATE TABLE `user_pwd` (
@@ -373,7 +252,7 @@ CREATE TABLE `V_spieler_internal` (`s_id` int(11), `name` varchar(20), `a_id` in
 
 
 DROP VIEW IF EXISTS `V_user`;
-CREATE TABLE `V_user` (`m_id` int(11), `name` varchar(20), `a_id` int(11), `pwd` varchar(256), `admin` tinyint(1), `leiter` varchar(1), `c_pwd` tinyint(1), `urlaub` date, `blocked` varchar(20));
+CREATE TABLE `V_user` (`m_id` int(11), `s_id` int(11), `b_id` int(11), `name` varchar(20), `a_id` int(11), `pwd` varchar(256), `admin` tinyint(1), `leiter` varchar(1), `c_pwd` tinyint(1), `urlaub` date, `blocked` varchar(20));
 
 
 DROP TABLE IF EXISTS `IV_tables`;
@@ -410,6 +289,6 @@ DROP TABLE IF EXISTS `V_spieler_internal`;
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `V_spieler_internal` AS select `spieler`.`s_id` AS `s_id`,`spieler`.`name` AS `name`,`spieler`.`a_id` AS `a_id`,`allianzen`.`allianz` AS `allianz`,(select 'x' from `allianzen` where (`allianzen`.`leiter_id` = `spieler`.`s_id`)) AS `leiter` from (`spieler` join `allianzen` on((`spieler`.`a_id` = `allianzen`.`a_id`)));
 
 DROP TABLE IF EXISTS `V_user`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `V_user` AS select `user_pwd`.`m_id` AS `m_id`,`spieler`.`name` AS `name`,`spieler`.`a_id` AS `a_id`,`user_pwd`.`pwd` AS `pwd`,`user_pwd`.`admin` AS `admin`,(select '1' from `allianzen` where (`allianzen`.`leiter_id` = `user_pwd`.`s_id`)) AS `leiter`,`user_pwd`.`c_pwd` AS `c_pwd`,`user_pwd`.`urlaub` AS `urlaub`,(select `spieler`.`name` from `spieler` where (`user_pwd`.`b_id` = `spieler`.`s_id`)) AS `blocked` from (`user_pwd` join `spieler` on((`user_pwd`.`s_id` = `spieler`.`s_id`)));
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_user` AS select `user_pwd`.`m_id` AS `m_id`,`spieler`.`s_id` AS `s_id`,`user_pwd`.`b_id` AS `b_id`,`spieler`.`name` AS `name`,`spieler`.`a_id` AS `a_id`,`user_pwd`.`pwd` AS `pwd`,`user_pwd`.`admin` AS `admin`,(select '1' from `allianzen` where (`allianzen`.`leiter_id` = `user_pwd`.`s_id`)) AS `leiter`,`user_pwd`.`c_pwd` AS `c_pwd`,`user_pwd`.`urlaub` AS `urlaub`,(select `spieler`.`name` from `spieler` where (`user_pwd`.`b_id` = `spieler`.`s_id`)) AS `blocked` from (`user_pwd` join `spieler` on((`user_pwd`.`s_id` = `spieler`.`s_id`))) where exists(select 1 from `blacklisted` where (`blacklisted`.`a_id` = `spieler`.`a_id`));
 
--- 2015-08-19 16:08:53
+-- 2015-10-17 16:19:07
