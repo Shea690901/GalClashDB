@@ -1,5 +1,7 @@
 <?php
 namespace GalClash {
+    use \Exception;
+
     class GCProfile {
         private $db  = NULL;
         private $req = NULL;
@@ -40,7 +42,7 @@ namespace GalClash {
                 try {
                     $user_info = $this->db->get_user_info($this->ses->user);
                 }
-                catch(\Exception $e) {
+                catch(Exception $e) {
                     error_message($e->getMessage());
                     return;
                 }
