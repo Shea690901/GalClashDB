@@ -396,7 +396,7 @@ namespace GalClash {
             return $this->get_ally_id($ally);
         }
 
-        public function change_leader($a_id, $p_id)
+        public function change_ally_leader($a_id, $p_id)
         {
             try {
                 $sth = $this->get_handle()->prepare("UPDATE `allianzen` SET `leiter_id` = :p_id WHERE `a_id` = :a_id");
@@ -483,7 +483,7 @@ namespace GalClash {
                     $a_id = $this->new_ally($ally);
                 $ret = $this->add_user($ally, $leader, $pwd, FALSE);
                 $p_id = $this->get_player_id($leader);
-                $this->change_leader($a_id, $p_id);
+                $this->change_ally_leader($a_id, $p_id);
 
                 $sth1->bindValue(":a_id", $a_id, PDO::PARAM_INT);
                 $sth2->bindValue(":a_id", $a_id, PDO::PARAM_INT);
@@ -535,6 +535,33 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
             }
             return count($players);
+        }
+
+        public function change_leader($ally, $name)
+        {
+            $dbh  = $this->get_handle();
+
+            $a_id = $this->get_ally_id($ally);
+            $p_id = $this->get_player_id($name);
+
+            try {
+                $dbh->beginTransaction();
+
+                $this->admin_user($name, 1);
+                $this->change_ally_leader($a_id, $p_id);
+
+                $dbh->commit();
+            }
+            catch(Exception $e) {
+                $dbh->rollBack();
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
         }
 
         /*
