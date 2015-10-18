@@ -108,6 +108,7 @@ namespace GalClash {
         {
             $this->logged_in = FALSE;
             unset($this->user);
+            $this->export();
         }
 
         public function is_logged_in()
