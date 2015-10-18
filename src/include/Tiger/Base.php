@@ -17,7 +17,7 @@ namespace Tiger {
     ** at the §ame time this class allows to iterate through it's
     ** (pseudo) member-varables
     */
-    class Base implements \iterator {
+    class Base implements \iterator, \Countable {
         private $data;
         private $valid_keys;
 
@@ -109,6 +109,11 @@ namespace Tiger {
             $key = key($this->data);
             $var = (($key !== NULL) && ($key !== FALSE));
             return $var;
+        }
+
+        public function count()
+        {
+            return count($this->data);
         }
     }
 
