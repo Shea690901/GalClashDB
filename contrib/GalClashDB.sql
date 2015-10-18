@@ -49,6 +49,23 @@ BEGIN
     COMMIT;
 END;;
 
+DROP PROCEDURE IF EXISTS `P_update_passwd`;;
+CREATE PROCEDURE `P_update_passwd`(IN `u_id` int, IN `pwd` varchar(256) CHARACTER SET 'utf8')
+BEGIN
+   DECLARE s varchar(256);
+   DECLARE s_id int default null;
+
+   START TRANSACTION;
+
+   l1: BEGIN
+      SET @s = concat("UPDATE `user_pwd` SET `pwd` = '", pwd, "' WHERE `m_id` = ",  @u_id);
+      PREPARE stm FROM @s;
+      EXECUTE stm;
+      DEALLOCATE PREPARE stm;
+      COMMIT;
+   END;
+END;;
+
 DROP EVENT IF EXISTS `IE_optimize_tables`;;
 CREATE EVENT `IE_optimize_tables` ON SCHEDULE EVERY 1 WEEK STARTS '2015-04-08 10:15:23' ON COMPLETION PRESERVE ENABLE DO CALL IP_optimize_tables();;
 
