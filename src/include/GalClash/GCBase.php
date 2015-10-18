@@ -66,10 +66,115 @@ namespace {
     $login_ret = isset($session) ? $session->login($early_errors, $db) : NULL;
 
     /*
-    ** destroy session (effectivly logout) in case of errors
+    ** logout session in case of errors
     */
     if(sizeof($early_errors) && isset($session))
-            $session->logout();
+        $session->logout();
+
+    /*
+    ** Output begins here
+    */
+    $page = new \GalClash\GCPage($request, $session, $themes);
+
+
+/*
+** from here on:
+** still mixed code (old & new)
+*/
+    debug_output();     // <<<< delete for production, together with definition in index.php <<<<
+
+    $page->header();
+    $page->start_main();
+
+    if(sizeof($early_errors))           // Ouch, we had some errrors
+    {
+        foreach($early_errors as $key => $value)
+        {
+            if($value !== NULL)
+                \GalClash\error_message(sprintf('Fehler wärend Initialisierung:<br />%s', $value->getMessage()));
+        }
+    }
+    if(!isset($session))                // Ups… without a session we have a problem…
+    {
+        \GalClash\error_message('Session konnte nicht initialisiert werden!');
+    }
+    else if(!$session->is_logged_in())  // We he a session, but it's not logged in yet
+    {
+        if(is_null($login_ret))         // this try went wrong…
+            \GalClash\error_message("Falscher Benutzername oder falsches Passwort!");
+
+        $session->login_form();
+    }
+    else                                // now we may work…
+    {
+        if(isset($request->profile) || $session->c_pwd)    /* Kontenverwaltung */
+        {
+            $profile = new \GalClash\GCProfile($session, $request, $db);
+            if(isset($request->update))
+                $profile->update();
+            $profile->form();
+        }
+        else if(isset($request->admin))                     /* ADMIN MODE */
+        {
+            $admin_page = new \GalClash\GCAdminMode($request, $session, $db);
+        }
+        else                                                /* normal Modus */
+        {
+            put_search_form();
+            
+            switch($request->state)
+            {
+                case "start":
+                    break;
+                case "suchen":
+                    if($request->spieler != "")
+                        $ret = suche(TRUE, $request->spieler, $request->exact);
+                    else if($request->allianz != "")
+                        $ret = suche(FALSE, $request->allianz, $request->exact);
+                    else if($request->galaxy != 0)
+                        $ret = overview($request->galaxy, $request->system);
+                    else
+                        \GalClash\error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
+                    if(isset($ret) && $ret->rowCount() > 0)
+                    {
+                        print("<div id=\"search_res\">");
+                        $a = display_result($ret);
+                        print("</div>");
+                    }
+                    else
+                    {
+                        \GalClash\error_message("Nichts gefunden.");
+                        $a = "";
+                    }
+                    if(!$request->exact)
+                        $a = $request->allianz;
+                    put_add_form(isset($request->spieler) ? $request->spieler: "", $a);
+                    break;
+                case "einfügen":
+                    break;
+                    if(!isset($request->loeschen))
+                        neue_kolonie($request);
+                    else
+                    {
+                        if(!isset($request->force))
+                            \GalClash\error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
+                        else
+                            remove_kolonie($request);
+                    }
+                    $ret = suche(TRUE, $request->spieler, TRUE);
+                    if(isset($ret) && $ret->rowCount() > 0)
+                        display_result($ret);
+                    put_add_form($request->spieler, $request->allianz);
+                    break;
+                default:
+                    \GalClash\error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
+            }
+        }
+    }
+
+    // that's it…
+    $page->end_main();
+    $page->footer();
 }
 
 namespace GalClash {
