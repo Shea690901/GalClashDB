@@ -48,7 +48,6 @@ namespace {
     try {
         $session = new GalClash\GCSession($request);
         $session->open();
-        $session->enable_java();                // <<<< delete this when ready <<<<
     }
     catch(Exception $e) {
         $early_errors[] = $e;
@@ -110,9 +109,6 @@ namespace {
         if(isset($request->profile) || $session->c_pwd)    /* Kontenverwaltung */
         {
             $profile = new \GalClash\GCProfile($session, $request, $db);
-            if(isset($request->update))
-                $profile->update();
-            $profile->form();
         }
         else if(isset($request->admin))                     /* ADMIN MODE */
         {
