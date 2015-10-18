@@ -378,11 +378,16 @@ namespace GalClash {
             if(isset($req->add_user))
             {
                 $ally = trim($req->am_ally);
-                $name = trim($req->name);
-                $pwd = trim($req->pwd);
                 $ret['ally'] = $ally;
                 $ret['forms'] = array('member', 'allies');
-                $this->add_user($ally, $name, $pwd);
+                if(($req->ally != '-') && (isset($req->names)))
+                    $this->move_users($ally, $req->names);
+                else
+                {
+                    $name = trim($req->name);
+                    $pwd = trim($req->pwd);
+                    $this->add_user($ally, $name, $pwd);
+                }
             }
             else if(isset($req->del_user))
             {
@@ -533,6 +538,31 @@ namespace GalClash {
             catch(Exception $e)
             {
                 error_message($e->getMessage());
+            }
+        }
+
+        private function move_users($ally, $names)
+        {
+            $db   = $this->db;
+            if(!$db->ally_has_access($ally))
+            {
+                error_message('Ungültige Zielallianz');
+                return;
+            }
+            foreach($names as $name)
+            {
+                if(!$db->player_has_access($name))
+                    error_message(sprintf('Ungültiger Username: %s', $name));
+                else
+                {
+                    try {
+                        $this->db->add_user($ally, $name, '---');
+                        success_message($name . " erfolgreich eingetragen…");
+                    }
+                    catch(Exception $e) {
+                        error_message($e->getMessage());
+                    }
+                }
             }
         }
 

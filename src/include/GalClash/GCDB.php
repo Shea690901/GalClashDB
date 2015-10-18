@@ -52,6 +52,31 @@ namespace GalClash {
             return ($sth->rowCount() == 1);
         }
 
+        public function player_has_access($user)
+        {
+            $dbh  = $this->get_handle();
+            if(is_string($user))
+                $user = $this->get_player_id($user);
+            if($user <= 0)
+                return FALSE;
+
+            $sth = $dbh->prepare('SELECT 1 FROM `V_user` WHERE `s_id` = :p_id');
+            try {
+                $sth->bindParam(':p_id', $user, PDO::PARAM_INT);
+                $sth->execute();
+            }
+            catch(\Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+            return ($sth->rowCount() == 1);
+        }
+
         public function get_user_info($user)
         {
             $dbh  = $this->get_handle();
