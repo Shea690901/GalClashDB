@@ -25,7 +25,7 @@ namespace {
             print('<div class="alert alert-info">');
             if(isset($session) && $session->use_java())
                 printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
-            printf('<pre>');
+            printf("<pre>'_COOKIE = ");
             var_dump($_COOKIE);
             foreach($GLOBALS as $key => $value)
             {
@@ -360,78 +360,6 @@ function display_result($sth)
     return $allianz;
 }
 
-function get_allianz($dbh, $user)
-{
-    $sth = $dbh->prepare("SELECT allianz FROM allianzen natural join spieler WHERE name = :name");
-    try {
-        $sth->bindValue(":name", $user);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        return NULL;
-    }
-    if($sth->rowCount() == 1)
-    {
-        $row = $sth->fetch(PDO::FETCH_OBJ);
-        return $row->allianz;
-    }
-    return NULL;
-}
-
-function add_allianz($dbh, $allianz)
-{
-    $sth = $dbh->prepare("INSERT INTO allianzen (allianz) VALUES ( :allianz )");
-    try {
-        $sth->bindValue(":allianz", $allianz);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        throw new Exception("rollback", 1);
-    }
-    try {
-        return get_allianz_id($dbh, $allianz);
-    }
-    catch(Exception $e) {
-        throw $e;
-    }
-}
-
-function add_spieler($dbh, $name, $a_id)
-{
-    $sth = $dbh->prepare("INSERT INTO spieler (name, a_id) VALUES ( :name, :a_id )");
-    try {
-        $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        $sth->bindValue(":name", $name);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        throw new Exception("rollback", 1);
-    }
-    try {
-        return get_spieler_id($dbh, $name);
-    }
-    catch(Exception $e) {
-        throw $e;
-    }
-}
-
-function update_spieler($dbh, $s_id, $a_id)
-{
-    $sth = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = s_id");
-    try {
-        $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        $sth->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        throw new Exception("rollback", 1);
-    }
-}
-
 function add_coords($dbh, $gal, $sys, $pla, $s_id)
 {
     $sth = $dbh->prepare("INSERT INTO coords (gal, sys, pla, s_id) VALUES (:gal, :sys, :pla, :s_id )");
@@ -624,106 +552,6 @@ function update_urlaub($datum)
         $sth->execute();
     }
     catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-    }
-}
-
-function neue_allianz()
-{
-    if($m_id == -1)
-        $sth3 = $dbh->prepare("INSERT INTO user_pwd ( s_id, pwd, admin ) VALUES ( :s_id, :pwd, 1 )");
-    $sth5 = $dbh->prepare("INSERT INTO blacklisted ( a_id ) VALUES ( :a_id )");
-    $sth6 = $dbh->prepare("INSERT INTO user_pwd ( s_id ) SELECT s_id FROM spieler " .
-            "WHERE a_id = :a_id AND NOT EXISTS ( SELECT 1 FROM user_pwd WHERE user_pwd.s_id  = spieler.s_id )");
-
-    try {
-        $dbh->beginTransaction();
-
-        if($a_id == -1)
-        {
-            $sth1->bindValue(":allianz", $allianz);
-            $sth1->execute();
-            $a_id = get_allianz_id($dbh, $allianz);
-        }
-        print('1');
-        $sth2->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        if($s_id == -1)
-        {
-            $sth2->bindValue(":name", $name);
-            $sth2->execute();
-            $s_id = get_spieler_id($dbh, $name);
-        }
-        else
-        {
-            $sth2->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-            $sth2->execute();
-        }
-        print('2');
-        if($m_id == -1)
-        {
-            $sth3->bindValue(":pwd", $pwd);
-            $sth3->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-            $sth3->execute();
-        }
-        print('3');
-        $sth4->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        $sth4->bindValue(":s_id", $s_id, PDO::PARAM_INT);
-        $sth4->execute();
-        print('4');
-        $sth5->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        $sth5->execute();
-        $sth6->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        $sth6->execute();
-
-        $dbh->commit();
-    }
-    catch(PDOException $e) {
-        $dbh->rollBack();
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-    }
-}
-
-function entferne_allianz()
-{
-    global $db;
-    global $request;
-
-    $dbh     = $db->get_handle();
-    $allianz = trim($request->allianz);
-
-    if(strlen($allianz) == 0)
-    {
-        \GalClash\error_message("Allianzname muss angegeben sein!");
-        return 0;
-    }
-    if($allianz == "-")
-    {
-        \GalClash\error_message("'-' als Name ist unzulässig!");
-        return 0;
-    }
-    $a_id = get_allianz_id($dbh, $allianz);
-
-    if($a_id == -1)
-    {
-        \GalClash\error_message(sprintf("'%s' ist kein Mitglied der Gruppe!", $allianz));
-        return 0;
-    }
-
-    $sth1 = $dbh->prepare("DELETE user_pwd FROM user_pwd NATURAL JOIN spieler WHERE a_id = :a_id");
-    $sth2 = $dbh->prepare("DELETE FROM blacklisted WHERE a_id = :a_id");
-
-    try {
-        $dbh->beginTransaction();
-
-        $sth1->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        $sth1->execute();
-        $sth2->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-        $sth2->execute();
-
-        $dbh->commit();
-    }
-    catch(PDOException $e) {
-        $dbh->rollBack();
         \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
     }
 }
