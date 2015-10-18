@@ -24,21 +24,24 @@ namespace GalClash {
             // ret contains a mapping with all parameters needed later on
             $ret = $this->process_request();
 
-            foreach($ret['forms'] as $form)
+            if(isset($ret['forms']))
             {
-                switch($form)
+                foreach($ret['forms'] as $form)
                 {
-                    case 'member':
-                        $this->display_member_forms($ret);
-                        unset($ret['overview']);
-                        break;
-                    case 'allies':
-                        $this->display_allies_forms($ret);
-                        unset($ret['overview']);
-                        break;
-                    default:
-                        throw new \ErrorException('Unknown formular type!');
-                        break;
+                    switch($form)
+                    {
+                        case 'member':
+                            $this->display_member_forms($ret);
+                            unset($ret['overview']);
+                            break;
+                        case 'allies':
+                            $this->display_allies_forms($ret);
+                            unset($ret['overview']);
+                            break;
+                        default:
+                            throw new \ErrorException('Unknown formular type!');
+                            break;
+                    }
                 }
             }
         }
@@ -125,9 +128,8 @@ namespace GalClash {
                                 printf("<input type=\"checkbox\" name=\"names[]\" disabled=\"disabled\">%s\n", $row->name, $row->name);
 ?>
                                 </td>
-                                <td align="center"><?php print($row->admin == 1 ?
-                                        ($row->name != $leader ? "X" : 'L') :
-                                        "-"); ?></td>
+                                <td align="center"><?php print($row->name == $leader ? "L" : 
+                                        ($row->admin == 1 ? 'X' : "-")); ?></td>
                                 <td align="center"><?php $d= $row->urlaub; print($d == "0000-00-00" ?
                                         "-" :
                                         ($d == "9999-12-31" ? "unbegrenzt" : date("d.m.Y", strtotime($d)))); ?></td>
@@ -185,7 +187,6 @@ namespace GalClash {
                     </select>
                     <input type="submit" name="overview" value="Auswahl" />
                 </fieldset>
-                <pre><?php var_dump($ally_group); ?></pre>
             </div>
 <?php
             }
@@ -203,10 +204,10 @@ namespace GalClash {
             if($this->session->is_leader())
             {
 ?>
-        <div id="admin_allies_forms">
+        <div id="admin_allies_forms"<?php print($ally == '-' ? '' : ' style="width:100%"'); ?>>
             <fieldset>
                 <legend>Neue Allianz in Gruppe</legend>
-                <p>Fügt eine neue Allianz den zugriffsberechtigten Allianzen hinzu<br />Die Angabe des Leiters ist zwingend!</p>
+                <p>Fügt eine neue Allianz den zugriffsberechtigten Allianzen hinzu.<br />Die Angabe des Leiters ist zwingend!</p>
                 <table border="0" cellpadding="0" cellspacing="4">
                     <tr>
                         <td align="right"><label for="n_ally">Allianz:</label></td>
@@ -229,7 +230,7 @@ namespace GalClash {
 ?>
             <fieldset>
                 <legend>Allianz aus Gruppe entfernen</legend>
-                <p>Löscht die markierte Allianz aus der Gruppe der zugriffsberechtigten Allianzen<br />
+                <p>Löscht die markierte Allianz aus der Gruppe der zugriffsberechtigten Allianzen.<br />
                 Die Angabe des Leiters dient der Sicherheitsabfrage und ist zwingend (man achte auf die Schreibweise)!</p>
                 <table border="0" cellpadding="0" cellspacing="4">
                     <tr>
@@ -266,9 +267,17 @@ namespace GalClash {
             if(isset($args['overview']))
                 $this->display_overview(($ally == "-" ? 0 : 1), $ally);
 ?>
-        <div id="admin_member_forms">
+        <div id="admin_member_forms"<?php print($ally != '-' ? '' : ' style="width:100%"'); ?>>
             <fieldset>
                 <legend>Neues Allianzmitglied</legend>
+<?php
+            if($ally != '-')
+            {
+?>
+                <p>Kann auch benutzt werden um nebenstehend ausgewählte User einer neuen Allianz zuzuweisen!</p>
+<?php
+            }
+?>
                 <table border="0" cellpadding="0" cellspacing="4">
                     <tr>
                         <td align="right"><label for="add_member_ally">Allianz:</label></td>
@@ -305,14 +314,14 @@ namespace GalClash {
             <fieldset>
                 <legend>Allianzmitglied löschen</legend>
                 <p>
-                Löscht die selektierten User<br />
-                Zur Sicherheit ist die weiter untenen befindliche Sicherheitsabfrage zu bejahen!
+                Löscht die selektierten User.<br />
+                Zur Sicherheit ist die weiter unten befindliche Sicherheitsabfrage zu bejahen!
                 </p>
                 <input type="submit" name="del_user" value="Löschen" />
             </fieldset>
             <fieldset>
                 <legend>Allianzmitglied sperren/entsperren</legend>
-                <p>Sperrt bzw. entsperrt für die selektierten User den Zugang zur Datenbank</p>
+                <p>Sperrt bzw. entsperrt für die selektierten User den Zugang zur Datenbank.</p>
                 <input type="submit" name="block_user" value="Eintragen" />
             </fieldset>
 <?php
@@ -321,8 +330,13 @@ namespace GalClash {
 ?>
             <fieldset>
                 <legend>Adminrechte geben/löschen</legend>
-                <p>Gestattet bzw. verbietet für die selektierten User den Adminzugang zur Datenbank</p>
+                <p>Gestattet bzw. verbietet für die selektierten User den Adminzugang zur Datenbank.</p>
                 <input type="submit" name="admin_user" value="Eintragen" />
+            </fieldset>
+            <fieldset>
+                <legend>Neuer Allianzleiter</legend>
+                <p>Trägt trägt den ausgewählten User als neuen Leiter für "<?php print($ally); ?>" ein.</p>
+                <input type="submit" name="new_leader" value="Eintragen" />
             </fieldset>
 <?php
                 }
@@ -360,7 +374,7 @@ namespace GalClash {
             // now begins the work
 
             $ret = array('overview' => 1, 'ally' => $req->ally);
-$ret['forms'] = array('member', 'allies');
+            $ret['forms'] = array('member', 'allies');
             if(isset($req->add_user))
             {
                 $ally = trim($req->am_ally);
@@ -434,7 +448,7 @@ $ret['forms'] = array('member', 'allies');
                     {
                         $ally = trim($req->names[0]);
                         $name = trim($req->name);
-                        if(strcmp($name, $this->db->get_ally_leader($ally)) == 0)
+                        if($name == $this->db->get_ally_leader($ally))
                             $this->del_ally($ally);
                         else
                             error_message("Allianzleiter nicht angegeben oder falsch");
@@ -442,26 +456,33 @@ $ret['forms'] = array('member', 'allies');
                     $ret['ally'] = '-';
                     $ret['forms'] = array('allies', 'member');
                 }
-            }
-            else if(0)
-            {
-                /*
-                default:
-                    if($this->session->is_leader() || TRUE)
+                else if(isset($req->new_leader))
+                {
+                    if((!isset($req->names)) || (count($req->names) != 1))
+                        error_message("Es muß genau ein User (der neue Allianzleiter) ausgewählt sein");
+                    else if(isset($req->force))
                     {
-                        switch($state)
-                        {
-                            case 'l_gruppe':
-                                $this->delete_alliance();
-                                $ret['overview'] = 1;
-                                $ret['ally'] = '-';
-                                break;
-                            default:
-                                // unknown request
-                        }
-                        break;
+                        if($req->force == "1")
+                            $this->new_leader($req->ally, $req->names[0], TRUE);
+                        else
+                            info_message('Operation abgebrochen…');
+                        $ret['ally'] = $req->ally;
+                        $ret['forms'] = array('member', 'allies');
                     }
-                    */
+                    else
+                    {
+                        $this->new_leader($req->ally, $req->names[0], FALSE);
+                        unset($ret['forms']);
+                    }
+                }
+                else
+                {
+                    error_message('Sie wünschen, MeLady?');
+                }
+            }
+            else
+            {
+                error_message('Sie wünschen, MeLady?');
             }
             return $ret;
         }
@@ -496,16 +517,18 @@ $ret['forms'] = array('member', 'allies');
             }
             catch(Exception $e) {
                 error_message($e->getMessage());
+                return 1;
             }
             return 0;
         }
 
         private function del_ally($ally)
         {
-            print('<pre>del_ally(');var_dump($ally);print(')</pre>');
             try {
                 $ret = $this->db->del_ally($ally);
-                success_message(sprintf("%s erfolgreich ausgetragen.\nzusätzlich %d Mitglieder wurden gesperrt", $ally, $ret));
+                success_message(sprintf("%s erfolgreich ausgetragen.\nzusätzlich wurde%s %d Mitglied%s gesperrt",
+                            $ally,
+                            $ret >1 ? "n" : "", $ret, $ret > 1 ? "er" : ""));
             }
             catch(Exception $e)
             {
@@ -603,6 +626,40 @@ $ret['forms'] = array('member', 'allies');
             }
             catch(Exception $e) {
                 error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+            }
+        }
+
+        private function new_leader($ally, $name, $force)
+        {
+            if($force)
+            {
+                try {
+                    $this->db->change_leader($ally, $name);
+                    success_message($name . " erfolgreich als neuer Leiter eingetragen…");
+                }
+                catch(Exception $e) {
+                    error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+                }
+            }
+            else
+            {
+?>
+    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8" class="rcontainer "> 
+        <fieldset>
+            <legend>Neuer Allianzleiter</legend>
+            <p>Sicherheitsabfrage!</p>
+            <p>Diese Änderung läßt sich ohne Mithilfe des neuen Leiters nicht rückgängig machen!</p>
+            <p>Soll "<?php print($name); ?>" wirklich als neuer Leiter für die Allianz "<?php print($ally); ?>" eingetragen werden?</p>
+            <input type="radio" name="force" value="1" />Ja<br />
+            <input type="radio" name="force" value="0" checked="checked" />Nein<br />
+            <input type="submit" name="new_leader" value="Eintragen" />
+            <input type="hidden" name="ally" value="<?php print($ally); ?>" />
+            <input type="hidden" name="names[]" value="<?php print($name); ?>" />
+            <input type="hidden" name="admin" value="1" />
+            <input type="hidden" name="state" value="work" />
+        </fieldset>
+    </form>
+<?php
             }
         }
 
