@@ -27,6 +27,31 @@ namespace GalClash {
         public function get_nul_ally()   { return $this->nul_ally; }
         public function get_nul_player() { return $this->nul_player; }
 
+        public function ally_has_access($ally)
+        {
+            $dbh  = $this->get_handle();
+            if(is_string($ally))
+                $ally = $this->get_ally_id($ally);
+            if($ally <= 0)
+                return FALSE;
+
+            $sth = $dbh->prepare('SELECT 1 FROM `blacklisted` WHERE `a_id` = :a_id');
+            try {
+                $sth->bindParam(':a_id', $ally, PDO::PARAM_INT);
+                $sth->execute();
+            }
+            catch(\Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+            return ($sth->rowCount() == 1);
+        }
+
         public function get_user_info($user)
         {
             $dbh  = $this->get_handle();
@@ -110,7 +135,7 @@ namespace GalClash {
         */
         public function get_ally_id($ally)
         {
-            $sth = $this->get_handle()->prepare("SELECT a_id FROM allianzen WHERE allianz = :ally");
+            $sth = $this->get_handle()->prepare("SELECT `a_id` FROM `allianzen` WHERE `allianz` = :ally");
             try {
                 $sth->bindValue(":ally", $ally);
                 $sth->execute();
@@ -140,7 +165,7 @@ namespace GalClash {
         */
         public function get_player_id($name)
         {
-            $sth = $this->get_handle()->prepare("SELECT s_id FROM spieler WHERE name = :name");
+            $sth = $this->get_handle()->prepare("SELECT `s_id` FROM `spieler` WHERE `name` = :name");
             try {
                 $sth->bindValue(":name", $name);
                 $sth->execute();
@@ -190,7 +215,7 @@ namespace GalClash {
         }
 
         /*
-        ** returns array of alliances (ids) within blocked group
+        ** returns array of alliances (ids) with access rights
         */
         public function get_ally_group_ids()
         {
@@ -198,7 +223,7 @@ namespace GalClash {
             if(!isset($this->ally_group_ids))
             {
                 $dbh = $this->get_handle();
-                $sth = $dbh->prepare("SELECT a_id FROM blacklisted");
+                $sth = $dbh->prepare("SELECT `a_id` FROM `blacklisted`");
 
                 try {
                     $sth->execute();
@@ -225,7 +250,7 @@ namespace GalClash {
         }
 
         /*
-        ** returns array of alliances (names) within blocked group
+        ** returns array of alliances (names) with access rights
         */
         public function get_ally_group()
         {
@@ -233,7 +258,7 @@ namespace GalClash {
             if(!isset($this->ally_group))
             {
                 $dbh = $this->get_handle();
-                $sth = $dbh->prepare("SELECT allianz FROM V_blacklisted");
+                $sth = $dbh->prepare("SELECT `allianz` FROM `V_blacklisted`");
 
                 try {
                     $sth->execute();
@@ -266,7 +291,7 @@ namespace GalClash {
         {
             $dbh = $this->get_handle();
 
-            $sth = $dbh->prepare("SELECT name FROM spieler JOIN allianzen on leiter_id = spieler.s_id WHERE allianz = :ally");
+            $sth = $dbh->prepare("SELECT `name` FROM `spieler` JOIN `allianzen` on `leiter_id` = `spieler`.`s_id` WHERE `allianz` = :ally");
             try {
                 $sth->bindValue(":ally", $ally);
                 $sth->execute();
@@ -288,6 +313,9 @@ namespace GalClash {
             return '-';
         }
 
+        /*
+        ** returns all members of questioned ally
+        */
         public function get_ally_players($ally)
         {
             /* we weren't called with this argument yet */
@@ -316,14 +344,15 @@ namespace GalClash {
                 {
                     $rows = $sth->fetchAll(PDO::FETCH_OBJ);
                     foreach($rows as $row)
-                        $this->users[$ally][] = $row->name;
+                        $this->players[$ally][] = $row->name;
                 }
             }
-            return $this->users[$ally];
+            return $this->players[$ally];
         }
 
         /*
         ** returns array of users in questioned ally
+        **    contains admin/blocked info
         **
         ** !!! omits oneself and leader of questioned ally !!!
         */
@@ -334,10 +363,13 @@ namespace GalClash {
             {
                 $dbh = $this->get_handle();
 
-                $sth = $dbh->prepare("SELECT name, admin, blocked FROM V_user WHERE a_id = :a_id " .
-                        "AND name != :name " .
-                        "AND name != ( SELECT spieler.name FROM ( spieler JOIN allianzen on leiter_id = spieler.s_id ) WHERE spieler.a_id = :a_id ) " .
-                        "ORDER BY name");
+                $sth = $dbh->prepare("SELECT `name`, `admin`, `blocked` FROM `V_user` WHERE `a_id` = :a_id " .
+                        "AND `name` != :name " .
+                        "AND `name` != ( " .
+                            "SELECT `spieler`.`name` FROM ( " .
+                                "`spieler` JOIN `allianzen` on `leiter_id` = `spieler`.`s_id` ) " .
+                            "WHERE `spieler`.`a_id` = :a_id ) " .
+                        "ORDER BY `name`");
 
                 try {
                     $sth->bindValue(":name", $_SESSION["user"]);
@@ -368,6 +400,30 @@ namespace GalClash {
                 }
             }
             return $this->users[$ally];
+        }
+
+        /*
+        ** returns ally which the player is a member of or FALSE if not found
+        */
+        public function get_player_ally($name)
+        {
+            $sth = $this->get_handle()->prepare("SELECT `allianz` FROM `allianzen` NATURAL JOIN `spieler` WHERE `name` = :name");
+            try {
+                $sth->bindValue(":name", $name);
+                $sth->execute();
+            }
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+            if($sth->rowCount() == 1)
+                return $sth->fetch(PDO::FETCH_OBJ)->allianz;
+            return FALSE;
         }
 
         /*
@@ -442,22 +498,37 @@ namespace GalClash {
             return $this->get_player_id($name);
         }
 
-        public function change_ally($p_id, $a_id)
+        public function change_player_ally($p_id, $a_id, $trans = TRUE)
         {
+            $dbh = $this->get_handle();
+
+            $sth1 = $dbh->prepare("UPDATE `allianzen` SET `leiter_id` = :nul WHERE `leiter_id` = :p_id");
+            $sth2 = $dbh->prepare("UPDATE `spieler` SET `a_id` = :a_id WHERE `s_id` = :p_id");
             try {
-                $sth = $this->get_handle()->prepare("UPDATE `spieler` SET `a_id` = :a_id WHERE `s_id` = :p_id");
-                $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-                $sth->bindValue(":p_id", $p_id, PDO::PARAM_INT);
-                $sth->execute();
+                if($trans)
+                    $dbh->beginTransaction();
+
+                $sth1->bindValue(":p_id", $p_id, PDO::PARAM_INT);
+                $sth1->bindValue(":nul", $this->nul_player, PDO::PARAM_INT);
+                $sth2->bindValue(":a_id", $a_id, PDO::PARAM_INT);
+                $sth2->bindValue(":p_id", $p_id, PDO::PARAM_INT);
+                $sth1->execute();
+                $sth2->execute();
+
+                if($trans)
+                    $dbh->commit();
             }
             catch(Exception $e) {
+                if($trans)
+                    $dbh->rollBack();
                 if(\DEBUG)
                 {
-                    $ei = $sth->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                    $ei[0] = $sth1->errorInfo();
+                    $ei[1] = $sth2->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", __FUNCTION__, $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
                 }
                 else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
             }
         }
 
@@ -472,9 +543,9 @@ namespace GalClash {
             $p_id = $this->get_player_id($leader);
             $u_id = $this->get_user_id($leader);
 
-            $sth1 = $dbh->prepare("INSERT INTO blacklisted ( a_id ) VALUES ( :a_id )");
-            $sth2 = $dbh->prepare("INSERT INTO user_pwd ( s_id, b_id ) SELECT s_id, :p_id FROM spieler " .
-                    "WHERE a_id = :a_id AND NOT EXISTS ( SELECT 1 FROM user_pwd WHERE user_pwd.s_id  = spieler.s_id )");
+            $sth1 = $dbh->prepare("INSERT INTO `blacklisted` ( `a_id` ) VALUES ( :a_id )");
+            $sth2 = $dbh->prepare("INSERT INTO `user_pwd` ( `s_id`, `b_id` ) SELECT `s_id`, :p_id FROM `spieler` " .
+                    "WHERE `a_id` = :a_id AND NOT EXISTS ( SELECT 1 FROM `user_pwd` WHERE `user_pwd`.`s_id` = `spieler`.`s_id` )");
 
             try {
                 $dbh->beginTransaction();
@@ -518,7 +589,7 @@ namespace GalClash {
 
                 $players = $this->get_ally_players($ally);
                 foreach($players as $name)
-                    $this->del_user($name, FALSE);  // do normal del_user without change ally…
+                    $this->del_user($name, FALSE, FALSE);  // do normal del_user without change ally and local transaction(!!)
                 $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
                 $sth->execute();
 
@@ -575,6 +646,9 @@ namespace GalClash {
             $p_id = $this->get_player_id($name);
             $u_id = $this->get_user_id($name);
 
+            $leader = $this->get_ally_leader($ally2 = $this->get_player_ally($name));
+            if(($ally != $ally2) && ($leader == $name) && $this->ally_has_access($ally2))
+                throw new Exception(sprintf("%s ist bereits Leiter von %s", $name, $ally2));
             $sth = $dbh->prepare("INSERT INTO `user_pwd` ( `s_id`, `pwd` ) VALUES ( :p_id, :pwd )");
             try {
                 if($trans)
@@ -583,7 +657,7 @@ namespace GalClash {
                 if($p_id == -1)
                     $p_id = $this->new_player($name, $a_id);
                 else
-                    $this->change_ally($p_id, $a_id);
+                    $this->change_player_ally($p_id, $a_id, FALSE);
 
                 if($u_id == -1)
                 {
@@ -614,18 +688,18 @@ namespace GalClash {
             $dbh = $this->get_handle();
 
             try {
-                if($c_ally && $trans)
+                if($trans)
                     $dbh->beginTransaction();
 
                 $this->admin_user($name, 0);
                 if($c_ally)
-                    $this->change_player_ally($this->get_player_id($name), $this->get_nul_ally());
+                    $this->change_player_ally($this->get_player_id($name), $this->get_nul_ally(), FALSE);
 
-                if($c_ally && $trans)
+                if($trans)
                     $dbh->commit();
             }
             catch(Exception $e) {
-                if($c_ally && $trans)
+                if($trans)
                     $dbh->rollBack();
                 if(\DEBUG)
                 {
@@ -638,26 +712,19 @@ namespace GalClash {
 
         public function block_user($name, $from_id)
         {
-            $dbh  = $this->get_handle();
-
             $info = $this->get_user_info($name);
             if($info == FALSE)
                 throw new Exception("User nicht gefunden");
             if($info['bid'] != $this->nul_player)
                 $from_id = $this->nul_player;
 
-            $sth = $dbh->prepare("UPDATE user_pwd SET b_id = :b_id WHERE m_id = :m_id");
+            $sth = $this->get_handle()->prepare("UPDATE `user_pwd` SET `b_id` = :b_id WHERE `m_id` = :u_id");
             try {
-                $dbh->beginTransaction();
-
                 $sth->bindValue(":b_id", $from_id, PDO::PARAM_INT);
-                $sth->bindValue(":m_id", $info['uid'], PDO::PARAM_INT);
+                $sth->bindValue(":u_id", $info['uid'], PDO::PARAM_INT);
                 $sth->execute();
-
-                $dbh->commit();
             }
             catch(PDOException $e) {
-                $dbh->rollBack();
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -671,21 +738,19 @@ namespace GalClash {
 
         public function admin_user($name, $force = -1)
         {
-            $dbh  = $this->get_handle();
-
             $info = $this->get_user_info($name);
             if($info == FALSE)
                 throw new Exception("User nicht gefunden");
             if(($info['bid'] != $this->nul_player) && ($force == -1))
                 throw new Exception("User ist gesperrt");
 
-            $sth = $dbh->prepare("UPDATE user_pwd SET admin = :admin WHERE m_id = :m_id");
+            $sth = $this->get_handle()->prepare("UPDATE `user_pwd` SET `admin` = :admin WHERE `m_id` = :u_id");
             try {
                 if($force == -1)
                     $sth->bindValue(":admin", 1 - $info['admin'], PDO::PARAM_INT);
                 else
                     $sth->bindValue(":admin", $force ? 1 : 0, PDO::PARAM_INT);
-                $sth->bindValue(":m_id", $info['uid'], PDO::PARAM_INT);
+                $sth->bindValue(":u_id", $info['uid'], PDO::PARAM_INT);
                 $sth->execute();
             }
             catch(PDOException $e) {
@@ -698,32 +763,6 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
             }
             return;
-        }
-
-        /*
-        ** general functions to add/change/delete players without access privileges
-        */
-        public function change_player_ally($p_id, $a_id, $trans = TRUE)
-        {
-            $dbh = $this->get_handle();
-
-            $sth = $dbh->prepare("UPDATE spieler SET a_id = :a_id WHERE s_id = :p_id");
-
-            try {
-                $sth->bindValue(":p_id", $p_id, PDO::PARAM_INT);
-                $sth->bindValue(":a_id", $a_id, PDO::PARAM_INT);
-                $sth->execute();
-            }
-            catch(PDOException $e) {
-                if(\DEBUG)
-                {
-                    $ei[0] = $sth1->errorInfo();
-                    $ei[1] = $sth2->errorInfo();
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage(%s/%s/%s)(%s/%s/%s):\n'%s'", __FUNCTION__, $ei[0][0], $ei[0][1], $ei[0][2], $ei[1][0], $ei[1][1], $ei[1][2], $e->getMessage()));
-                }
-                else
-                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
-            }
         }
 
     } // class GCDB
