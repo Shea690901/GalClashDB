@@ -171,11 +171,13 @@ namespace Tiger {
         public function enable_java()
         {
             $this->java = TRUE;
+            $this->export();
         }
 
         public function disable_java()
         {
-            $this->java = TRUE;
+            $this->java = FALSE;
+            $this->export();
         }
     }
 }
