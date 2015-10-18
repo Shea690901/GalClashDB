@@ -2,7 +2,6 @@
 namespace GalClash {
     class GCSession extends \Tiger\Session {
         private $handler;
-        private $logged_in  = FALSE;
         private $request_ob = NULL;
 
         public function __construct(GCRequest $req = NULL)
@@ -13,6 +12,8 @@ namespace GalClash {
 //          register_shutdown_function('session_write_close');
             session_name('GalClashSession');
             $this->request_ob = $req;
+            $logged_in  = FALSE;
+            $this->add_keep(array('logged_in', 'user'));
         }
 
         public function __destruct()
@@ -26,12 +27,14 @@ namespace GalClash {
             if(is_null($db))
             {
                 $this->logged_in = FALSE;
-                $this->destroy();
+                unset($this->user);
                 return FALSE;
             }
+            else
+                $this->db = $db;
             if(is_null($this->request_ob))
             {
-                $this->destroy();
+                unset($this->user);
                 return FALSE;
             }
             foreach($errors as $error)
@@ -39,73 +42,94 @@ namespace GalClash {
                 if(get_class($error) == '\Tiger\DB_Exception')
                 {
                     $this->logged_in = FALSE;
-                    $this->destroy();
+                    unset($this->user);
                     return FALSE;
                 }
                 else if(get_class($error) == '\Tiger\Session_Exception')
                 {
                     $this->logged_in = FALSE;
-                    $this->destroy();
+                    unset($this->user);
                     return FALSE;
                 }
             }
             if(isset($this->request_ob->logout))
             {
                 $this->logged_in = FALSE;
-                $this->destroy();
+                unset($this->user);
                 return FALSE;
             }
-                
+
             if(!isset($this->user))
             {
                 if(!isset($this->request_ob->user))
                     return FALSE;
-                $user      = $this->request_ob->user;
-                $dbh       = $db->get_handle();
-                try {
-                    $user_info = $db->get_user_info($user);
-                }
-                catch(\Exception $e) {
-                    printf('<pre>%s</pre>', $e->getMessage());
-                    return FALSE;
-                }
-                if($user_info && ($user_info['blocked'] == '-') && ($recrypt = check_password($db, $user_info['uid'], $this->request_ob->pwd)))
-                {
-                    if($recrypt == 2)
-                        update_passwd($uid, $this->request_ob->pwd);
-                    $this->user   = $user;
-                    $this->uid    = $user_info['uid'];
-                    $this->pid    = $user_info['pid'];
-                    $this->aid    = $user_info['aid'];
-                    $this->ally   = $user_info['ally'];
-                    $this->admin  = $user_info['admin'];
-                    $this->leader = $user_info['leader'];
-                    $this->c_pwd  = $user_info['c_pwd'];
-                }
-                else
-                {
-                    return NULL;
-                }
+                $this->user = $this->request_ob->user;
             }
-            $this->logged_in = TRUE;
-            $this->set_time(time());
-            $this->export();
-            return TRUE;
+
+            try {
+                $user_info = $this->get_user_info();
+            }
+            catch(\Exception $e) {
+                error_message($e->getMessage());
+                return FALSE;
+            }
+            if($user_info)
+            {
+                if(!$this->is_logged_in())
+                {
+                    if(isset($this->request_ob->pwd))
+                        $recrypt = check_password($db, $user_info['uid'], $this->request_ob->pwd);
+                    else
+                        return NULL;
+                    if($recrypt == 0)
+                        return NULL;
+                    else if($recrypt == 2)
+                        update_passwd($uid, $this->request_ob->pwd);
+                    if($user_info['blocked'] != '-')
+                        return NULL;
+                }
+                $this->uid   = $user_info['uid'];
+                $this->pid   = $user_info['pid'];
+                $this->aid   = $user_info['aid'];
+                $this->ally  = $user_info['ally'];
+                $this->c_pwd = $user_info['c_pwd'];
+                $this->logged_in = TRUE;
+                $this->set_time(time());
+                $this->export();
+                return TRUE;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+
+        public function logout()
+        {
+            $this->logged_in = FALSE;
+            unset($this->user);
         }
 
         public function is_logged_in()
         {
-            return $this->is_valid() ? $this->logged_in : FALSE;
+            return $this->is_valid() ? (isset($this->logged_in) ? $this->logged_in : FALSE ) : FALSE;
         }
 
         public function is_admin()
         {
-            return $this->is_valid() ? ($this->admin || $this->is_leader()) : FALSE;
+            if($this->is_valid())
+                $admin = $this->get_user_info()['admin'];
+            else
+                return FAlSE;
+            return $admin || $this->is_leader();
         }
 
         public function is_leader()
         {
-            return $this->is_valid() ? $this->leader : FALSE;
+            if($this->is_valid())
+                return $this->get_user_info()['leader'];
+            else
+                return FAlSE;
         }
 
         public function login_form()
@@ -134,7 +158,7 @@ namespace GalClash {
 <?php
         }
 
-        function logout_button()
+        public function logout_button()
         {
 ?>
             <div id="logout_b">
@@ -145,6 +169,11 @@ namespace GalClash {
                 </form>
             </div>
 <?php
+        }
+
+        private function get_user_info()
+        {
+            return $this->db->get_user_info($this->user);
         }
     }
 }

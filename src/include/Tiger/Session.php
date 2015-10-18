@@ -34,15 +34,34 @@ namespace Tiger {
         private $time;
 
         private $java        = FALSE;       /* default: we don't use java */
+        private $keep        = [];
 
         public function __construct()
         {
             if(session_status() === PHP_SESSION_DISABLED)
                 throw new Session_Exception('Sessions disabled', Session_Exception::SESSION_INVALID);
+            $this->add_keep(array('fingerprint', 'java', 'time'));
         }
 
         public function __destruct()
         {
+        }
+
+        public function add_keep($arg)
+        {
+            if(is_string($arg))
+                $this->keep[] = $arg;
+            else if(is_array($arg))
+            {
+                foreach($arg as $val)
+                    if(is_string($val))
+                        $this->keep[] = $val;
+                    else
+                        throw new \Exception('invalid argument to add_keep');
+            }
+            else
+                throw new \Exception('invalid argument to add_keep');
+            $this->keep = array_unique($this->keep);
         }
 
         public function set_timeout($timeout)
@@ -56,7 +75,7 @@ namespace Tiger {
         {
             if(!is_int($time))
                 return;
-            $this->time= $time;
+            $this->time = $time;
         }
 
         public function get_time()
@@ -91,16 +110,7 @@ namespace Tiger {
 
         private function keep_vars($key)
         {
-            switch($key)
-            {
-                case 'fingerprint':
-                case 'java':
-                case 'timeout':
-                case 'time':
-                    return TRUE;
-                default:
-                    return FALSE;
-            }
+            return in_array($key, $this->keep);
         }
 
         public function destroy()
@@ -148,7 +158,8 @@ namespace Tiger {
             }
             foreach($this as $key => $value)
             {
-                $_SESSION[$key] = $value;
+                if($this->keep_vars($key))
+                    $_SESSION[$key] = $value;
             }
         }
 

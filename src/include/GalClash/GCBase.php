@@ -69,7 +69,7 @@ namespace {
     ** destroy session (effectivly logout) in case of errors
     */
     if(sizeof($early_errors) && isset($session))
-            $session->destroy();
+            $session->logout();
 }
 
 namespace GalClash {
