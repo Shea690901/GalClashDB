@@ -43,14 +43,14 @@ namespace GalClash {
 
         public function set_theme($cookie)
         {
-            $theme = $cookie->theme;
+            $theme = $cookie->get_key('theme');;
             if(is_null($theme))
                 $theme = DEFAULT_THEME;
             if((strpos($theme, "/") !== FALSE) || ($this->check_theme($theme) == FALSE))
                 $theme = DEFAULT_THEME;
 
             if(isset($_POST["theme"]) && $this->check_theme($_POST["theme"]))
-                $cookie->theme = ($theme = $_POST['theme']);
+                $cookie->set_key('theme', ($theme = $_POST['theme']));
 
             $this->selected = $theme;
         }
