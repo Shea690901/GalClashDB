@@ -55,7 +55,7 @@ namespace GalClash {
         <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH); ?>/default.css" />
         <link rel="stylesheet" type="text/css" href="<?php print(CSS_PATH . "/" . $this->themes->get_selected()); ?>.css" />
 <?php
-            if(isset($this->ses) && $this->ses->use_java())
+            if(isset($this->ses) && \use_javascript())
             {
                 printf("\t\t<script src=\"%s\"></script>\n", JQUERY_PATH);
                 printf("\t\t<script src=\"%s\"></script>\n", SCRIPT_PATH);
