@@ -33,14 +33,13 @@ namespace Tiger {
         private $timeout     = 300;         /* default timeout 5min */
         private $time;
 
-        private $java        = FALSE;       /* default: we don't use java */
         private $keep        = [];
 
         public function __construct()
         {
             if(session_status() === PHP_SESSION_DISABLED)
                 throw new Session_Exception('Sessions disabled', Session_Exception::SESSION_INVALID);
-            $this->add_keep(array('fingerprint', 'java', 'time'));
+            $this->add_keep(array('fingerprint', 'time'));
         }
 
         public function __destruct()
@@ -161,23 +160,6 @@ namespace Tiger {
                 if($this->keep_vars($key))
                     $_SESSION[$key] = $value;
             }
-        }
-
-        public function use_java()
-        {
-            return isset($this->java) ? $this->java : FALSE;
-        }
-
-        public function enable_java()
-        {
-            $this->java = TRUE;
-            $this->export();
-        }
-
-        public function disable_java()
-        {
-            $this->java = FALSE;
-            $this->export();
         }
     }
 }
