@@ -2,6 +2,7 @@
 namespace Tiger {
     class Cookie extends Base {
         private $_cookie_name;
+        private $_cookies_allowed = FALSE;
 
         public function __construct($name)
         {
@@ -16,7 +17,34 @@ namespace Tiger {
 
         public function __destruct()
         {
+            $this->save();
             parent::__destruct();
+        }
+
+        public function allow()
+        {
+            $this->_cookies_allowed = TRUE;
+        }
+
+        public function disallow()
+        {
+            $this->_cookies_allowed = FALSE;
+        }
+
+        public function set_key($key, $val)
+        {
+            $this->$key = $val;
+        }
+
+        public function unset_key($key)
+        {
+            unset($this->$key);
+            setcookie(sprintf('%s[%s]', $this->_cookie_name, $key), '', time() - 1000);
+        }
+
+        public function get_key($key)
+        {
+            return isset($this->$key) ? $this->$key : NULL;
         }
 
         public function save()
@@ -26,7 +54,12 @@ namespace Tiger {
             else
             {
                 foreach($this as $key => $value)
-                    setcookie(sprintf('%s[%s]', $this->_cookie_name, $key), $value, time() + 60 * 60 * 24 * 30);
+                {
+                    if(!$this->_cookies_allowed || !isset($value) || is_null($value))
+                        setcookie(sprintf('%s[%s]', $this->_cookie_name, $key), '', time() - 1000);
+                    else
+                        setcookie(sprintf('%s[%s]', $this->_cookie_name, $key), $value, time() + 60 * 60 * 24 * 30);
+                }
             }
         }
     }
