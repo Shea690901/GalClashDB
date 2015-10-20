@@ -132,11 +132,11 @@ namespace GalClash {
         public function update_passwd($uid, $pwd)
         {
             $dbh  = $this->get_handle();
-            $stmt = $dbh->prepare('CALL `P_update_passwd`(:uid, :pwd)');
+            $sth = $dbh->prepare('UPDATE `user_pwd` SET `pwd` = :pwd WHERE `m_id` = :uid');
             try {
-                $stmt->bindParam(':uid', $uid);
-                $stmt->bindParam(':pwd', $pwd);
-                $stmt->execute();
+                $sth->bindParam(':uid', $uid);
+                $sth->bindParam(':pwd', $pwd);
+                $sth->execute();
             }
             catch(Exception $e) {
                 if(\DEBUG)
