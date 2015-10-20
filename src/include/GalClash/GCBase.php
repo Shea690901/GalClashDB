@@ -1,5 +1,6 @@
 <?php
 namespace {
+
     /*
     ** compatibily layer for php 5.5 password-hashing-functions
     */
@@ -26,6 +27,48 @@ namespace {
     */
     $early_errors = array();
 
+    // we might have some cookies…
+    $cookie = new \Tiger\Cookie('GalClashDB');
+    // we need cookies…
+    $cookie->allow();
+
+    $javascript;
+
+    function use_javascript()
+    {
+        global $javascript;
+
+        return isset($javascript) ? $javascript : FALSE;
+    }
+
+    function enable_javascript()
+    {
+        global $javascript;
+        global $cookie;
+
+        $javascript = TRUE;
+        $cookie->set_key('javascript', TRUE);
+    }
+
+    function disable_javascript()
+    {
+        global $javascript;
+        global $cookie;
+
+        $javascript = FALSE;
+        $cookie->unset_key('javascript');
+    }
+
+    /*
+    ** we might have some cookie set to know if we use javascript
+    ** if not: we don't use it:
+    */
+    $val = $cookie->get_key('javascript');
+    if(!is_null($val) && $val)
+        enable_javascript();
+    else
+        disable_javascript();
+
     /*
     ** get sanitized request variables
     */
@@ -46,7 +89,7 @@ namespace {
     ** initialize the session
     */
     try {
-        $session = new GalClash\GCSession($request);
+        $session = new GalClash\GCSession($request, $cookie);
         $session->open();
     }
     catch(Exception $e) {
@@ -57,7 +100,7 @@ namespace {
     ** initialize css-themes
     */
     $themes = new \GalClash\GCThemes();
-    $themes->set_theme();
+    $themes->set_theme($cookie);
 
     /*
     ** login
@@ -69,6 +112,30 @@ namespace {
     */
     if(sizeof($early_errors) && isset($session))
         $session->logout();
+
+    /*
+    ** processing the request needs to be done here
+    ** later we might to need change a cookie without being able to do so
+    */
+    if(isset($session) && $session->is_logged_in())         // do we have a logged_in session?
+    {
+        // OK! then we can work
+        if(isset($request->profile) || $session->c_pwd)    /* Kontenverwaltung */
+        {
+            $profile = new \GalClash\GCProfile($request, $session, $db);
+            $profile->process_request($cookie); // Profile changes might change cookies
+        }
+        else if(isset($request->admin))                     /* ADMIN MODE */
+        {
+            $admin_page = new \GalClash\GCAdminMode($request, $session, $db);
+            $admin_page->process_request();
+        }
+    }
+
+    /*
+    ** here after cookies can't be set => we might destroy the cookie objet now
+    */
+    unset($cookie);
 
     /*
     ** Output begins here
@@ -108,11 +175,11 @@ namespace {
     {
         if(isset($request->profile) || $session->c_pwd)    /* Kontenverwaltung */
         {
-            $profile = new \GalClash\GCProfile($session, $request, $db);
+            $profile->put_form();
         }
         else if(isset($request->admin))                     /* ADMIN MODE */
         {
-            $admin_page = new \GalClash\GCAdminMode($request, $session, $db);
+            $admin_page->put_form();
         }
         else                                                /* normal Modus */
         {
@@ -182,7 +249,7 @@ namespace GalClash {
         global $session;
 
         printf('<div class="alert alert-%s">', $type);
-        if($close && isset($session) && $session->use_java())
+        if($close && isset($session) && use_javascript())
             printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
         printf('%s</div>', $msg);
     }
