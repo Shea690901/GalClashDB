@@ -3,35 +3,6 @@ namespace GalClash {
     use \Exception;
 
     class GCAdminMode extends GCMode {
-
-        /*
-        ** __constructor
-        **
-        ** process request
-        */
-        public function __construct(GCRequest $request, GCSession $session, GCDB $db)
-        {
-            parent::__construct();
-
-            // save for subsequent functions…
-            $this->db      = $db;
-            $this->request = $request;
-            $this->session = $session;
-
-            // first we need to know what changed, so we know what to display…
-            // ret contains a mapping with all parameters needed later on
-            $this->ret = $this->process_request();
-        }
-
-        /*
-        ** __destructor
-        ** prints:
-        */
-        public function __destruct()
-        {
-            parent::__destruct();
-        }
-
         /*
         ** depending on result of process_request print:
         ** - alliance overview
@@ -79,7 +50,7 @@ namespace GalClash {
         {
             $db      = $this->db;
             $dbh     = $db->get_handle();
-            $session = $this->session;
+            $session = $this->ses;
 
 ?>
             <div id="admin_ally_overview">
@@ -187,7 +158,7 @@ namespace GalClash {
                     print("<option selected=\"selected\">-</option>");
                 foreach($ally_group as $member)
                 {
-                    if(($ally == "-") && ($member == $this->session->ally))
+                    if(($ally == "-") && ($member == $this->ses->ally))
                         $fmt = "<option selected=\"selected\">%s</option>";
                     else
                         $fmt = "<option>%s</option>";
@@ -211,7 +182,7 @@ namespace GalClash {
 <?php
             if(isset($args['overview']))
                 $this->display_overview(($ally == "-" ? 0 : 1), $ally);
-            if($this->session->is_leader())
+            if($this->ses->is_leader())
             {
 ?>
         <div id="admin_allies_forms"<?php print($ally == '-' ? '' : ' style="width:100%"'); ?>>
@@ -264,7 +235,7 @@ namespace GalClash {
 
         private function display_member_forms($args)
         {
-            $session    = $this->session;
+            $session    = $this->ses;
             $db         = $this->db;
 
             $ally       = $args['ally'];
@@ -384,10 +355,15 @@ namespace GalClash {
 <?php
         }
 
-        public function process_request()
+        public function process_request($arg = NULL)
         {
-            $req   = $this->request;
-            $ses   = $this->session;
+            $this->ret = $this->do_it();
+        }
+
+        private function do_it()
+        {
+            $req   = $this->req;
+            $ses   = $this->ses;
             $state = trim($req->state);
 
             // nothing really to process…
@@ -423,9 +399,9 @@ namespace GalClash {
             else if(isset($req->del_user))
             {
                 if(!isset($req->names))
-                    $this->store_error_message("Keine zu löschenden User selektiert");
+                    error_message("Keine zu löschenden User selektiert");
                 else if(!isset($req->del_security))
-                    $this->store_error_message("Sicherheitsabfrage nicht bestätigt");
+                    error_message("Sicherheitsabfrage nicht bestätigt");
                 else
                 {
                     foreach($req->names as $name)
@@ -437,7 +413,7 @@ namespace GalClash {
             else if(isset($req->block_user))
             {
                 if(!isset($req->names))
-                    $this->store_error_message("Keine zu ändernden User selektiert");
+                    error_message("Keine zu ändernden User selektiert");
                 else
                 {
                     foreach($req->names as $name)
@@ -451,7 +427,7 @@ namespace GalClash {
                 if(isset($req->admin_user))
                 {
                     if(!isset($req->names))
-                        $this->store_error_message("Keine zu ändernden User selektiert");
+                        error_message("Keine zu ändernden User selektiert");
                     else
                     {
                         foreach($req->names as $name)
@@ -479,7 +455,7 @@ namespace GalClash {
                 else if(isset($req->del_ally))
                 {
                     if(!isset($req->names))
-                        $this->store_error_message("Keine zu löschende Allianz selektiert");
+                        error_message("Keine zu löschende Allianz selektiert");
                     else
                     {
                         $ally = trim($req->names[0]);
@@ -495,13 +471,13 @@ namespace GalClash {
                 else if(isset($req->new_leader))
                 {
                     if((!isset($req->names)) || (count($req->names) != 1))
-                        $this->store_error_message("Es muß genau ein User (der neue Allianzleiter) ausgewählt sein");
+                        error_message("Es muß genau ein User (der neue Allianzleiter) ausgewählt sein");
                     else if(isset($req->force))
                     {
                         if($req->force == "1")
                             $this->new_leader($req->ally, $req->names[0], TRUE);
                         else
-                            $this->store_info_message('Operation abgebrochen…');
+                            info_message('Operation abgebrochen…');
                         $ret['ally'] = $req->ally;
                         $ret['forms'] = array('member', 'allies');
                     }
@@ -514,12 +490,12 @@ namespace GalClash {
                 }
                 else
                 {
-                    $this->store_error_message('Sie wünschen, MeLady?');
+                    error_message('Sie wünschen, MeLady?');
                 }
             }
             else
             {
-                $this->store_error_message('Sie wünschen, MeLady?');
+                error_message('Sie wünschen, MeLady?');
             }
             return $ret;
         }
@@ -528,17 +504,17 @@ namespace GalClash {
         {
             if(strlen($ally) == 0)
             {
-                $this->store_error_message("Allianzname muss angegeben sein!");
+                error_message("Allianzname muss angegeben sein!");
                 return 1;
             }
             if(strlen($name) == 0)
             {
-                $this->store_error_message("Leitername muss angegeben sein!");
+                error_message("Leitername muss angegeben sein!");
                 return 1;
             }
             if(($ally == '-') || ($name == "-"))
             {
-                $this->store_error_message("'-' als Allianz- oder Leitername ist unzulässig!");
+                error_message("'-' als Allianz- oder Leitername ist unzulässig!");
                 return 1;
             }
             if(strlen($pwd) == 0)
@@ -546,14 +522,14 @@ namespace GalClash {
             $c_pwd = password_hash($pwd, PASSWORD_DEFAULT);
             try {
                 $ret = $this->db->add_ally($ally, $name, $c_pwd);
-                $this->store_success_message($name . " erfolgreich eingetragen…");
+                success_message($name . " erfolgreich eingetragen…");
                 if($ret == -1)
-                    $this->store_message(sprintf("Initiales Passwort für %s lautet:<br />%s", $name,  $pwd), 'warning');
+                    message(sprintf("Initiales Passwort für %s lautet:<br />%s", $name,  $pwd), 'warning');
                 else
-                    $this->store_info_message('Altes Passwort wurde beibehalten…');
+                    info_message('Altes Passwort wurde beibehalten…');
             }
             catch(Exception $e) {
-                $this->store_error_message($e->getMessage());
+                error_message($e->getMessage());
                 return 1;
             }
             return 0;
@@ -563,13 +539,13 @@ namespace GalClash {
         {
             try {
                 $ret = $this->db->del_ally($ally);
-                $this->store_success_message(sprintf("%s erfolgreich ausgetragen.\nzusätzlich wurde%s %d Mitglied%s gesperrt",
+                success_message(sprintf("%s erfolgreich ausgetragen.\nzusätzlich wurde%s %d Mitglied%s gesperrt",
                             $ally,
                             $ret >1 ? "n" : "", $ret, $ret > 1 ? "er" : ""));
             }
             catch(Exception $e)
             {
-                $this->store_error_message($e->getMessage());
+                error_message($e->getMessage());
             }
         }
 
@@ -578,21 +554,21 @@ namespace GalClash {
             $db   = $this->db;
             if(!$db->ally_has_access($ally))
             {
-                $this->store_error_message('Ungültige Zielallianz');
+                error_message('Ungültige Zielallianz');
                 return;
             }
             foreach($names as $name)
             {
                 if(!$db->player_has_access($name))
-                    $this->store_error_message(sprintf('Ungültiger Username: %s', $name));
+                    error_message(sprintf('Ungültiger Username: %s', $name));
                 else
                 {
                     try {
                         $this->db->add_user($ally, $name, '---');
-                        $this->store_success_message($name . " erfolgreich eingetragen…");
+                        success_message($name . " erfolgreich eingetragen…");
                     }
                     catch(Exception $e) {
-                        $this->store_error_message($e->getMessage());
+                        error_message($e->getMessage());
                     }
                 }
             }
@@ -602,12 +578,12 @@ namespace GalClash {
         {
             if(strlen($name) == 0)
             {
-                $this->store_error_message("Spielername muss angegeben sein!");
+                error_message("Spielername muss angegeben sein!");
                 return;
             }
             if($name == "-")
             {
-                $this->store_error_message("'-' als Spielername ist unzulässig!");
+                error_message("'-' als Spielername ist unzulässig!");
                 return;
             }
             if(strlen($pwd) == 0)
@@ -615,14 +591,14 @@ namespace GalClash {
             $c_pwd = password_hash($pwd, PASSWORD_DEFAULT);
             try {
                 $ret = $this->db->add_user($ally, $name, $c_pwd);
-                $this->store_success_message($name . " erfolgreich eingetragen…");
+                success_message($name . " erfolgreich eingetragen…");
                 if($ret == -1)
-                    $this->store_message(sprintf('Initiales Passwort für %s lautet:<br />%s', $name, $pwd), 'info');
+                    message(sprintf('Initiales Passwort für %s lautet:<br />%s', $name, $pwd), 'info');
                 else
-                    $this->store_info_message('Altes Passwort wurde beibehalten…');
+                    info_message('Altes Passwort wurde beibehalten…');
             }
             catch(Exception $e) {
-                $this->store_error_message($e->getMessage());
+                error_message($e->getMessage());
             }
         }
 
@@ -632,20 +608,20 @@ namespace GalClash {
 
             if(strlen($name) == 0)
             {
-                $this->store_error_message("Spielername muss angegeben sein!");
+                error_message("Spielername muss angegeben sein!");
                 return;
             }
             if($name == "-")
             {
-                $this->store_error_message("'-' als Spielername ist unzulässig!");
+                error_message("'-' als Spielername ist unzulässig!");
                 return;
             }
             try {
                 $db->del_user($name);
-                $this->store_success_message($name . " erfolgreich gelöscht…");
+                success_message($name . " erfolgreich gelöscht…");
             }
             catch(Exception $e) {
-                $this->store_error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+                error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
             }
         }
 
@@ -653,20 +629,20 @@ namespace GalClash {
         {
             if(strlen($name) == 0)
             {
-                $this->store_error_message("Spielername muss angegeben sein!");
+                error_message("Spielername muss angegeben sein!");
                 return;
             }
             if($name == "-")
             {
-                $this->store_error_message("'-' als Spielername ist unzulässig!");
+                error_message("'-' als Spielername ist unzulässig!");
                 return;
             }
             try {
-                $this->db->block_user($name, $this->session->pid);
-                $this->store_success_message($name . " erfolgreich geändert…");
+                $this->db->block_user($name, $this->ses->pid);
+                success_message($name . " erfolgreich geändert…");
             }
             catch(Exception $e) {
-                $this->store_error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+                error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
             }
         }
 
@@ -674,20 +650,20 @@ namespace GalClash {
         {
             if(strlen($name) == 0)
             {
-                $this->store_error_message("Spielername muss angegeben sein!");
+                error_message("Spielername muss angegeben sein!");
                 return;
             }
             if($name == "-")
             {
-                $this->store_error_message("'-' als Spielername ist unzulässig!");
+                error_message("'-' als Spielername ist unzulässig!");
                 return;
             }
             try {
                 $this->db->admin_user($name);
-                $this->store_success_message($name . " erfolgreich geändert…");
+                success_message($name . " erfolgreich geändert…");
             }
             catch(Exception $e) {
-                $this->store_error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+                error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
             }
         }
 
@@ -697,10 +673,10 @@ namespace GalClash {
             {
                 try {
                     $this->db->change_leader($ally, $name);
-                    $this->store_success_message($name . " erfolgreich als neuer Leiter eingetragen…");
+                    success_message($name . " erfolgreich als neuer Leiter eingetragen…");
                 }
                 catch(Exception $e) {
-                    $this->store_error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
+                    error_message(sprintf("%s:\n%s", $name, $e->getMessage()));
                 }
             }
         }
