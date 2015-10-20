@@ -2,12 +2,16 @@
 namespace Tiger {
     class Cookie extends Base {
         private $_cookie_name;
-        private $_cookies_allowed = FALSE;
 
         public function __construct($name)
         {
             parent::__construct();
+
+            if(!is_string($name) || (strlen($name) == 0))
+                throw new Exception(__CLASS__ . '::' . __FUNCTION__ . ': Parameterfehler');
             $this->_cookie_name = $name;
+            $this->_cookies_allowed = FALSE;
+
             if(isset($_COOKIE[$name]))
             {
                 foreach($_COOKIE[$name] as $key => $val)
@@ -31,6 +35,11 @@ namespace Tiger {
             $this->_cookies_allowed = FALSE;
         }
 
+        public function is_allowed()
+        {
+            return $this->_cookies_allowed;
+        }
+
         public function set_key($key, $val)
         {
             $this->$key = $val;
@@ -49,7 +58,7 @@ namespace Tiger {
 
         public function save()
         {
-            if(count($this) == 0)
+            if(!$this->is_allowed() || (count($this) == 0))
                 setcookie($this->_cookie_name, '', time() - 1000);
             else
             {
