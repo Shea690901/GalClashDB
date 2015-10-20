@@ -3,6 +3,7 @@ namespace GalClash {
     class GCSession extends \Tiger\Session {
         private $handler;
         private $request_ob = NULL;
+        private $error_mesg = FALSE;     // do we have to display an error?
 
         public function __construct(GCRequest $req = NULL)
         {
@@ -13,7 +14,7 @@ namespace GalClash {
             session_name('GalClashSession');
             $this->request_ob = $req;
             $logged_in  = FALSE;
-            $this->add_keep(array('logged_in', 'user'));
+            $this->add_keep(array('logged_in', 'user', 'theme', 'java'));
         }
 
         public function __destruct()
@@ -104,9 +105,10 @@ namespace GalClash {
             }
         }
 
-        public function logout()
+        public function logout($error=FALSE)
         {
             $this->logged_in = FALSE;
+            $this->error_msg = $error; // if TRUE we have to display an error_message
             unset($this->user);
             $this->export();
         }
@@ -135,6 +137,8 @@ namespace GalClash {
 
         public function login_form()
         {
+            if($this->error_msg)
+                error_message("Falsches Passwort!");
 ?>
             <div id="touch-screen" class="alert alert-danger">
                 <h1>Touchscreen gefunden :-)</h1>
