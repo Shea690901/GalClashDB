@@ -6,6 +6,8 @@ namespace {
    - {theme}.css   : Farb- und teilweise Positionseinstellungen
 */
 
+    ob_start();
+
     /*
     ** load configuration
     */
@@ -23,7 +25,7 @@ namespace {
             global $session;
 
             print('<div class="alert alert-info">');
-            if(isset($session) && $session->use_java())
+            if(use_javascript())
                 printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
             printf("<pre>'_COOKIE = ");
             var_dump($_COOKIE);
@@ -36,7 +38,7 @@ namespace {
                 }
             }
             print('</pre>');
-            if(isset($session) && $session->use_java())
+            if(use_javascript())
                 printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
             printf("</div>\n");
         }
@@ -700,5 +702,6 @@ function allianz_aenderung()
     */
     require_once 'include/GalClash/GCBase.php';
 
+    ob_flush();
 }
 ?>
