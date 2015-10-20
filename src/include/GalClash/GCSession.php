@@ -3,7 +3,7 @@ namespace GalClash {
     class GCSession extends \Tiger\Session {
         private $handler;
         private $request_ob = NULL;
-        private $error_mesg = FALSE;     // do we have to display an error?
+        private $error_msg  = FALSE;     // do we have to display an error?
 
         public function __construct(GCRequest $req = NULL)
         {
