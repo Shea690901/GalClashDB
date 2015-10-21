@@ -149,6 +149,46 @@ namespace GalClash {
             }
         }
 
+        function get_vacation($user)
+        {
+            $sth = $this->get_handle()->prepare("SELECT `urlaub` FROM `V_user` WHERE `name` = :name");
+            try {
+                $sth->bindParam(':name', $user);
+                $sth->execute();
+            }
+            catch(Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+            $row = $sth->fetch(PDO::FETCH_OBJ);
+            $date = $row->urlaub;
+            return ($date == "0000-00-00" ? "-" : ($date == "9999-12-31" ? "+" : date("d.m.Y", strtotime($row->urlaub))));
+        }
+
+        function update_vacation($user, $date)
+        {
+            $sth = $this->get_handle()->prepare("UPDATE user_pwd SET urlaub = :date WHERE s_id = ( SELECT s_id FROM spieler WHERE name = :name )");
+            try {
+                $sth->bindValue(":date", $date);
+                $sth->bindValue(":name", $user);
+                $sth->execute();
+            }
+            catch(PDOException $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+        }
+
         /*
         ** get_ally_id
         **

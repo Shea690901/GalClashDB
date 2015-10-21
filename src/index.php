@@ -512,41 +512,6 @@ function remove_kolonie($arg)
     \GalClash\error_message("Kolonie nicht gefunden!");
 }
 
-function get_urlaub()
-{
-    global $db;
-    global $session;
-
-    $dbh = $db->get_handle();
-    $sth = $dbh->prepare("SELECT urlaub FROM V_user WHERE name = ?");
-    try {
-        $sth->execute(array($session->user));
-    }
-    catch(PDOException $e) {
-        return "Fehler";
-    }
-    $row = $sth->fetch(PDO::FETCH_OBJ);
-    $datum = $row->urlaub;
-    return ($datum == "0000-00-00" ? "-" : ($datum == "9999-12-31" ? "+" : date("d.m.Y", strtotime($row->urlaub))));
-}
-
-function update_urlaub($datum)
-{
-    global $db;
-    global $session;
-
-    $dbh = $db->get_handle();
-    $sth = $dbh->prepare("UPDATE user_pwd SET urlaub = :datum WHERE s_id = ( SELECT s_id FROM spieler WHERE name = :name )");
-    try {
-        $sth->bindValue(":datum", $datum);
-        $sth->bindValue(":name", $session->user);
-        $sth->execute();
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-    }
-}
-
 function namens_aenderung()
 {
     global $db;
