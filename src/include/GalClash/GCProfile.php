@@ -2,98 +2,15 @@
 namespace GalClash {
     use \Exception;
 
-    class GCProfile {
-        private $db  = NULL;
-        private $req = NULL;
-        private $ses = NULL;
-
-        public function __construct(GCSession $ses, GCRequest $req, GCDB $db)
+    class GCProfile extends GCMode {
+        public function put_form()
         {
-            $this->db  = $db;
-            $this->req = $req;
-            $this->ses = $ses;
-        }
-
-        public function __destruct() {}
-
-        public function update()
-        {
-            if(isset($this->req->pwd))
-            {
-                $opwd  = $request->opwd;
-                $npwd1 = $request->npwd1;
-                $npwd2 = $request->npwd2;
-                if(strlen($npwd1) < 8)
-                {
-                    error_message("Passwort zu kurz!");
-                    return;
-                }
-                if($npwd1 != $npwd2)
-                {
-                    error_message("Passwörter stimmen nicht überein!");
-                    return;
-                }
-                if($opwd == $npwd1)
-                {
-                    error_message("Altes und neues Passwort sind identisch!");
-                    return;
-                }
-
-                try {
-                    $user_info = $this->db->get_user_info($this->ses->user);
-                }
-                catch(Exception $e) {
-                    error_message($e->getMessage());
-                    return;
-                }
-                if($user_info && $this->check_password($user_info['pwd'], $opwd))
-                {
-                    $this->db->update_passwd($user, password_hash($this->request_ob->pwd, PASSWORD_DEFAULT));
-                }
-                else
-                {
-                    error_message("Falsches Passwort!");
-                    cancel_session();
-                }
+            if($this->ret['form'] == FALSE)
                 return;
-            }
-            if(isset($request->urlaub))
-            {
-                $datum = $request->datum;
-                switch($datum)
-                {
-                    case "+":
-                        $datum = "9999-12-31";
-                        break;
-                    case "-":
-                        $datum = "0000-00-00";
-                        break;
-                    default:
-                        if($r = sscanf($datum, "%d.%d.%d", $d, $m, $y) != 3)
-                        {
-                            error_message("Fehlerhaftes Datum!");
-                            return;
-                        }
-                        if($y < 100)
-                            $y += 2000;
-                        $t = strtotime(sprintf("%4d-%02d-%02d", $y, $m, $d));
-                        if($t === FALSE)
-                        {
-                            error_message("ungültiges Datum: '" . $datum . "'");
-                            return;
-                        }
-                        $datum = date("Y-m-d", $t);
-                        break;
-                }
-                update_urlaub($datum);
-            }
-        }
-            //put_konto_forms($session->c_pwd);
+            $session = $this->ses;
 
-        public function form()
-        {
-            if($this->ses->c_pwd)
-                warning_message("Bitte Passwort ändern");
+            if($session->c_pwd)
+                $this->store_warning_message("Bitte Passwort ändern");
 ?>
             <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
                 <fieldset>
@@ -113,10 +30,9 @@ namespace GalClash {
                             <td><input name="npwd2" id="npwd2" type="password" size="20" maxlength="20" /></td>
                         </tr>
                     </table>
-                    <input type="submit" value="Ändern" /><input type="reset" value="Abbrechen" />
-                    <input name="update" type="hidden" value="1" />
+                    <input type="submit" name="ch_pwd" value="Ändern" /><input type="reset" value="Eingabe löschen" />
                     <input name="profile" type="hidden" value="1" />
-                    <input name="pwd" type="hidden" value="1" />
+                    <input type="hidden" name="state" value="work" />
                 </fieldset>
             </form>
             <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
@@ -125,29 +41,161 @@ namespace GalClash {
                     <table border="0" cellpadding="0" cellspacing="4">
                         <tr>
                             <td align="right"><label for="urlaub">in Urlaub bis:</label></td>
-                            <td><input name="datum" id="urlaub" type="text" size="10" maxlength="10" value="<?php print(get_urlaub()); ?>"/></td>
+                            <td><input name="date" id="urlaub" type="text" size="10" maxlength="10" value="<?php print($this->db->get_vacation($this->ses->user)); ?>"/></td>
                             <td>Format: dd.mm.yyyy<br />Eintrag löschen: '-'<br />unbestimmte Zeit: '+'</td>
                         </tr>
                     </table>
-                    <input type="submit" value="Eintragen" /><input type="reset" value="Abbrechen" />
-                    <input name="update" type="hidden" value="1" />
-                    <input name="profile" type="hidden" value="1" />
-                    <input name="urlaub" type="hidden" value="1" />
+                    <input type="submit" name="vacation" value="Eintragen" />
+                    <input type="hidden" name="profile" value="1" />
+                    <input type="hidden" name="state" value="work" />
                 </fieldset>
             </form>
             <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
                 <fieldset>
                     <legend>Javascript</legend>
-                    <input type="radio" name="js" value="1" />einschalten<br />
-                    <input type="radio" name="js" value="0" />ausschalten<br />
-                    <input type="submit" value="Eintragen" /><input type="reset" value="Abbrechen" />
-                    <input name="update" type="hidden" value="1" />
+                    <p>Javascript wird z.B. für die schließbaren Meldungsboxen verwendet.<br />
+                    Man kann diese Seite aber auch, ohne relevanten Verlust der
+                    Funktionalität, komplett ohne Javascript verwenden.</p>
+                    <table border="0" cellpadding="0" cellspacing="4">
+                        <tr>
+                            <td align="right"><label for="js">Javascript</label></td>
+                            <td>
+                                <input type="checkbox" id="js" name="js" value="1"
+                                    <?php print(\use_javascript() ? ' checked="checked"' : ''); ?>
+                                    />
+                            </td>
+                        </tr>
+                    </table>
+                    <input type="submit" name="java" value="Eintragen" />
                     <input name="profile" type="hidden" value="1" />
-                    <input name="java" type="hidden" value="1" />
+                    <input type="hidden" name="state" value="work" />
                 </fieldset>
             </form>
         <?php
         }
+
+        public function process_request($cookie = NULL)
+        {
+            if(!((gettype($cookie) == 'object') && (get_class($cookie) == 'Tiger\Cookie')))
+                throw new Exception(__CLASS__ . '::' . __FJNCTION__ . ': Fehlerhafter Parameter');
+            $this->ret = $this->do_it($cookie);
+        }
+
+        private function do_it($cookie)
+        {
+            $request = $this->req;
+            $session = $this->ses;
+            $db      = $this->db;
+            $state   = trim($request->state);
+
+            // normaly we later want to display the formulars
+            $ret['form'] = TRUE;
+
+            // nothing to do (yet)
+            if($state == 'start')
+                return $ret;
+
+            // now begins the work
+
+            if(isset($request->java))
+            {
+                if(isset($request->js))
+                {
+                    \enable_javascript();
+                    $this->store_info_message('Die Verwendung von Javascript ist erlaubt…');
+                }
+                else
+                {
+                    \disable_javascript();
+                    $this->store_info_message('Die Verwendung von Javascript ist verboten…');
+                }
+            }
+            else if(isset($request->ch_pwd))
+            {
+                $opwd  = $request->opwd;
+                $npwd1 = $request->npwd1;
+                $npwd2 = $request->npwd2;
+
+                if(strlen($npwd1) < 8)
+                {
+                    $this->store_error_message("Passwort zu kurz!");
+                }
+                else if($npwd1 != $npwd2)
+                {
+                    $this->store_error_message("Passwörter stimmen nicht überein!");
+                }
+                else if($opwd == $npwd1)
+                {
+                    $this->store_error_message("Altes und neues Passwort sind identisch!");
+                }
+                else
+                {
+                    try {
+                        $user_info = $db->get_user_info($session->user);
+                    }
+                    catch(Exception $e) {
+                        $this->store_error_message($e->getMessage());
+                        return $ret;
+                    }
+                    if($user_info && check_password($db, ($u_id = $user_info['uid']), $opwd))
+                    {
+                        $db->update_passwd($u_id, password_hash($this->req->npwd1, PASSWORD_DEFAULT));
+                        $this->store_success_message('Passwort erfolgreich gewechselt…');
+                    }
+                    else
+                    {
+                        $session->logout(TRUE);
+                        return $ret;
+                    }
+                }
+            }
+            else if(isset($request->vacation))
+            {
+                $date = $request->date;
+                switch($date)
+                {
+                    case "+":
+                        $date = "9999-12-31";
+                        break;
+                    case "-":
+                        $date = "0000-00-00";
+                        break;
+                    default:
+                        if(sscanf($date, "%d.%d.%d", $d, $m, $y) != 3)
+                        {
+                            $this->store_error_message("Fehlerhaftes Datum!");
+                            return $ret;
+                        }
+                        if($y < 100)
+                            $y += 2000;
+                        $t = strtotime(sprintf("%4d-%02d-%02d", $y, $m, $d));
+                        if($t === FALSE)
+                        {
+                            $this->store_error_message("ungültiges Datum: '" . $date . "' (Falsches Format)");
+                            return $ret;
+                        }
+                        if($t <= time())
+                        {
+                            $this->store_error_message("ungültiges Datum: '" . $date . "' (Datum bereits vergangen)");
+                            return $ret;
+                        }
+                        $date = date("Y-m-d", $t);
+                        break;
+                }
+                $db->update_vacation($session->user, $date);
+                $this->store_success_message('Urlaub erfolgreich eingetragen…');
+            }
+            else
+            {
+                $this->store_error_message('Sie wünschen, MeLady?');
+            }
+            return $ret;
+        }
+
+        public function update()
+        {
+        }
+            //put_konto_forms($session->c_pwd);
     }
 }
 ?>
