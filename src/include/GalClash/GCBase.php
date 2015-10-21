@@ -1,6 +1,5 @@
 <?php
 namespace {
-
     /*
     ** compatibily layer for php 5.5 password-hashing-functions
     */
@@ -115,17 +114,17 @@ namespace {
 
     /*
     ** processing the request needs to be done here
-    ** later we might to need change a cookie without being able to do so
+    ** e.g. we might be forced to logoff and thus have to change the displayed header…
     */
     if(isset($session) && $session->is_logged_in())         // do we have a logged_in session?
     {
         // OK! then we can work
-        if(isset($request->profile) || $session->c_pwd)    /* Kontenverwaltung */
+        if(isset($request->profile) || $session->c_pwd)     // user profile
         {
             $profile = new \GalClash\GCProfile($request, $session, $db);
             $profile->process_request($cookie); // Profile changes might change cookies
         }
-        else if(isset($request->admin))                     /* ADMIN MODE */
+        else if(isset($request->admin))                     // ADMIN MODE
         {
             $admin_page = new \GalClash\GCAdminMode($request, $session, $db);
             $admin_page->process_request();
@@ -133,7 +132,8 @@ namespace {
     }
 
     /*
-    ** here after cookies can't be set => we might destroy the cookie objet now
+    ** here after cookies won't be set => we might destroy the cookie objet now
+    ** (thus actually setting the cookie)
     */
     unset($cookie);
 
@@ -149,7 +149,15 @@ namespace {
 */
     debug_output();     // <<<< delete for production, together with definition in index.php <<<<
 
+    /*
+    ** display header section
+    **  - title
+    **  - optional subtitle
+    **  - "menu bar"
+    */
     $page->header();
+
+    // start main section, contents comes later…
     $page->start_main();
 
     if(sizeof($early_errors))           // Ouch, we had some errrors
@@ -157,31 +165,41 @@ namespace {
         foreach($early_errors as $key => $value)
         {
             if($value !== NULL)
-                \GalClash\error_message(sprintf('Fehler wärend Initialisierung:<br />%s', $value->getMessage()));
+                \GalClash\error_message(sprintf('Fehler während Initialisierung:<br />%s', $value->getMessage()));
         }
     }
     if(!isset($session))                // Ups… without a session we have a problem…
     {
         \GalClash\error_message('Session konnte nicht initialisiert werden!');
     }
-    else if(!$session->is_logged_in())  // We he a session, but it's not logged in yet
+    else
     {
-        if(is_null($login_ret))         // this try went wrong…
-            \GalClash\error_message("Falscher Benutzername oder falsches Passwort!");
+        // first look if we have some message boxes to display…
+        if(isset($request->profile))                        // user profile
+        {
+            $profile->msg_boxes();
+        }
+        else if(isset($request->admin))                     // ADMIN MODE
+        {
+            $admin_page->msg_boxes();
+        }
 
-        $session->login_form();
-    }
-    else                                // now we may work…
-    {
-        if(isset($request->profile) || $session->c_pwd)    /* Kontenverwaltung */
+        if(!$session->is_logged_in())                       // not logged in (anymore?)
+        {
+            if(is_null($login_ret))                         // we just tried to log in, but this try went wrong…
+                \GalClash\error_message("Falscher Benutzername oder falsches Passwort!");
+
+            $session->login_form();
+        }
+        else if(isset($request->profile) || $session->c_pwd)    // user profile (might be first login)
         {
             $profile->put_form();
         }
-        else if(isset($request->admin))                     /* ADMIN MODE */
+        else if(isset($request->admin))                     // ADMIN MODE
         {
             $admin_page->put_form();
         }
-        else                                                /* normal Modus */
+        else                                                // normal mode
         {
             put_search_form();
             
