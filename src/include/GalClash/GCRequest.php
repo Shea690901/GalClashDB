@@ -1,7 +1,8 @@
 <?php
-namespace GalClash {
-    class GCRequest extends \Tiger\Request {
 
+namespace GalClash {
+    class GCRequest extends \Tiger\Request
+    {
         public function __construct()
         {
             ini_set('request_order', 'P');
@@ -17,9 +18,7 @@ namespace GalClash {
 
         private function set_defaults()
         {
-            $this->state = "start";      /* state for statemachine */
+            $this->state = 'start';      /* state for statemachine */
         }
     }
 }
-
-?>

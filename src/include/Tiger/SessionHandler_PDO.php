@@ -1,4 +1,5 @@
 <?php
+
 namespace Tiger {
     class SessionHandler_PDO implements \SessionHandlerInterface
     {
@@ -8,27 +9,28 @@ namespace Tiger {
         public function __construct($engine, $host, $port, $user, $password)
         {
             $this->engine = $engine;
-            $this->host   = $host;
-            $this->port   = $port;
-            $this->user   = $user;
-            $this->pwd    = $password;
+            $this->host = $host;
+            $this->port = $port;
+            $this->user = $user;
+            $this->pwd = $password;
         }
 
         public function open($savePath, $sessionName)
         {
             try {
                 $this->db = new DB_PDO($this->engine, $this->host, $this->port, 'PHP_SESSION_STORE', 'utf8', $this->user, $this->pwd);
-            }
-            catch(DB_Exception $e) {
+            } catch (DB_Exception $e) {
                 printf('<pre>%s</pre>', $e->getMessage());
                 die;
             }
+
             return true;
         }
 
         public function close()
         {
             unset($this->db);
+
             return true;
         }
 
@@ -41,15 +43,14 @@ namespace Tiger {
                 $stmt->bindValue('user', $this->user);
                 $stmt->bindValue('id', $id);
                 $stmt->execute();
-            }
-            catch(\PDOException $e) {
-                if($e->getCode() != '42000')
-                {
+            } catch (\PDOException $e) {
+                if ($e->getCode() != '42000') {
                     printf('<pre>%s</pre>', $e->getMessage());
                     die;
                 }
             }
             $row = $stmt->fetch(\PDO::FETCH_OBJ);
+
             return ($row === false ? '' : $row->data);
         }
 
@@ -63,12 +64,13 @@ namespace Tiger {
                 $stmt->bindValue('id', $id);
                 $stmt->bindValue('data', $data);
                 $stmt->execute();
+            } catch (\PDOException $e) {
+                printf('<pre>%s</pre>', $e->getMessage());
+
+                return false;
             }
-            catch(\PDOException $e) {
-                    printf('<pre>%s</pre>', $e->getMessage());
-                    return FALSE;
-            }
-            return TRUE;
+
+            return true;
         }
 
         public function destroy($id)
@@ -80,13 +82,13 @@ namespace Tiger {
                 $stmt->bindValue('user', $this->user);
                 $stmt->bindValue('id', $id);
                 $stmt->execute();
-            }
-            catch(\PDOException $e) {
-                    printf('<pre>%s</pre>', $e->getMessage());
-                    return FALSE;
+            } catch (\PDOException $e) {
+                printf('<pre>%s</pre>', $e->getMessage());
+
+                return false;
             }
 
-            return TRUE;
+            return true;
         }
 
         public function gc($maxlifetime)
@@ -98,15 +100,13 @@ namespace Tiger {
                 $stmt->bindValue('user', $this->user);
                 $stmt->bindValue('maxlifetime', $maxlifetime);
                 $stmt->execute();
-            }
-            catch(\PDOException $e) {
-                    printf('<pre>%s</pre>', $e->getMessage());
-                    return FALSE;
+            } catch (\PDOException $e) {
+                printf('<pre>%s</pre>', $e->getMessage());
+
+                return false;
             }
 
-            return TRUE;
+            return true;
         }
     }
 }
-
-?>

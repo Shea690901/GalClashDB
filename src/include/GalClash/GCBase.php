@@ -1,4 +1,5 @@
 <?php
+
 namespace {
     /*
     ** compatibily layer for php 5.5 password-hashing-functions
@@ -12,19 +13,16 @@ namespace {
     require_once 'include/Tiger/Base.php';
     $GalClash = new \Tiger\AutoLoader(\Tiger\AutoLoader::APPLICATION, 'GalClash');
 
-    if(DEBUG)
-    {
-        error_reporting(E_ALL|E_STRICT|E_NOTICE|E_DEPRECATED);
-    }
-    else
-    {
+    if (DEBUG) {
+        error_reporting(E_ALL | E_STRICT | E_NOTICE | E_DEPRECATED);
+    } else {
         error_reporting(E_ALL);
     }
 
     /*
     ** storage for error messages which occured before sending the page-header
     */
-    $early_errors = array();
+    $early_errors = [];
 
     // we might have some cookies…
     $cookie = new \Tiger\Cookie('GalClashDB');
@@ -37,7 +35,7 @@ namespace {
     {
         global $javascript;
 
-        return isset($javascript) ? $javascript : FALSE;
+        return isset($javascript) ? $javascript : false;
     }
 
     function enable_javascript()
@@ -45,8 +43,8 @@ namespace {
         global $javascript;
         global $cookie;
 
-        $javascript = TRUE;
-        $cookie->set_key('javascript', TRUE);
+        $javascript = true;
+        $cookie->set_key('javascript', true);
     }
 
     function disable_javascript()
@@ -54,7 +52,7 @@ namespace {
         global $javascript;
         global $cookie;
 
-        $javascript = FALSE;
+        $javascript = false;
         $cookie->unset_key('javascript');
     }
 
@@ -63,10 +61,11 @@ namespace {
     ** if not: we don't use it:
     */
     $val = $cookie->get_key('javascript');
-    if(!is_null($val) && $val)
+    if (!is_null($val) && $val) {
         enable_javascript();
-    else
+    } else {
         disable_javascript();
+    }
 
     /*
     ** get sanitized request variables
@@ -78,10 +77,9 @@ namespace {
     */
     try {
         $db = new \GalClash\GCDB(DB_ENGINE, DB_HOST, DB_PORT, DB_NAME, DB_CHARSET, DB_USER, DB_PWD);
-    }
-    catch(Exception $e) {
+    } catch (Exception $e) {
         $early_errors[] = $e;
-        $db             = NULL;
+        $db = null;
     }
 
     /*
@@ -90,8 +88,7 @@ namespace {
     try {
         $session = new GalClash\GCSession($request, $cookie);
         $session->open();
-    }
-    catch(Exception $e) {
+    } catch (Exception $e) {
         $early_errors[] = $e;
     }
 
@@ -104,28 +101,31 @@ namespace {
     /*
     ** login
     */
-    $login_ret = isset($session) ? $session->login($early_errors, $db) : NULL;
+    $login_ret = isset($session) ? $session->login($early_errors, $db) : null;
 
     /*
     ** logout session in case of errors
     */
-    if(sizeof($early_errors) && isset($session))
+    if (count($early_errors) && isset($session)) {
         $session->logout();
+    }
 
     /*
     ** processing the request needs to be done here
     ** e.g. we might be forced to logoff and thus have to change the displayed header…
     */
-    if(isset($session) && $session->is_logged_in())         // do we have a logged_in session?
-    {
+    if (isset($session) && $session->is_logged_in()) {
+        // do we have a logged_in session?
+
         // OK! then we can work
-        if(isset($request->profile) || $session->c_pwd)     // user profile
-        {
+        if (isset($request->profile) || $session->c_pwd) {
+            // user profile
+
             $profile = new \GalClash\GCProfile($request, $session, $db);
             $profile->process_request($cookie); // Profile changes might change cookies
-        }
-        else if(isset($request->admin))                     // ADMIN MODE
-        {
+        } elseif (isset($request->admin)) {
+            // ADMIN MODE
+
             $admin_page = new \GalClash\GCAdminMode($request, $session, $db);
             $admin_page->process_request();
         }
@@ -141,7 +141,6 @@ namespace {
     ** Output begins here
     */
     $page = new \GalClash\GCPage($request, $session, $themes);
-
 
 /*
 ** from here on:
@@ -160,95 +159,97 @@ namespace {
     // start main section, contents comes later…
     $page->start_main();
 
-    if(sizeof($early_errors))           // Ouch, we had some errrors
-    {
-        foreach($early_errors as $key => $value)
-        {
-            if($value !== NULL)
+    if (count($early_errors)) {
+        // Ouch, we had some errrors
+
+        foreach ($early_errors as $key => $value) {
+            if ($value !== null) {
                 \GalClash\error_message(sprintf('Fehler während Initialisierung:<br />%s', $value->getMessage()));
+            }
         }
     }
-    if(!isset($session))                // Ups… without a session we have a problem…
-    {
+    if (!isset($session)) {
+        // Ups… without a session we have a problem…
+
         \GalClash\error_message('Session konnte nicht initialisiert werden!');
-    }
-    else
-    {
+    } else {
         // first look if we have some message boxes to display…
-        if(isset($request->profile))                        // user profile
-        {
+        if (isset($request->profile)) {
+            // user profile
+
             $profile->msg_boxes();
-        }
-        else if(isset($request->admin))                     // ADMIN MODE
-        {
+        } elseif (isset($request->admin)) {
+            // ADMIN MODE
+
             $admin_page->msg_boxes();
         }
 
-        if(!$session->is_logged_in())                       // not logged in (anymore?)
-        {
-            if(is_null($login_ret))                         // we just tried to log in, but this try went wrong…
-                \GalClash\error_message("Falscher Benutzername oder falsches Passwort!");
+        if (!$session->is_logged_in()) {
+            // not logged in (anymore?)
+
+            if (is_null($login_ret)) {                         // we just tried to log in, but this try went wrong…
+                \GalClash\error_message('Falscher Benutzername oder falsches Passwort!');
+            }
 
             $session->login_form();
-        }
-        else if(isset($request->profile) || $session->c_pwd)    // user profile (might be first login)
-        {
+        } elseif (isset($request->profile) || $session->c_pwd) {
+            // user profile (might be first login)
+
             $profile->put_form();
-        }
-        else if(isset($request->admin))                     // ADMIN MODE
-        {
+        } elseif (isset($request->admin)) {
+            // ADMIN MODE
+
             $admin_page->put_form();
-        }
-        else                                                // normal mode
-        {
+        } else {
+            // normal mode
+
             put_search_form();
-            
-            switch($request->state)
-            {
-                case "start":
+
+            switch ($request->state) {
+                case 'start':
                     break;
-                case "suchen":
-                    if($request->spieler != "")
-                        $ret = suche(TRUE, $request->spieler, $request->exact);
-                    else if($request->allianz != "")
-                        $ret = suche(FALSE, $request->allianz, $request->exact);
-                    else if($request->galaxy != 0)
+                case 'suchen':
+                    if ($request->spieler != '') {
+                        $ret = suche(true, $request->spieler, $request->exact);
+                    } elseif ($request->allianz != '') {
+                        $ret = suche(false, $request->allianz, $request->exact);
+                    } elseif ($request->galaxy != 0) {
                         $ret = overview($request->galaxy, $request->system);
-                    else
-                        \GalClash\error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
-                    if(isset($ret) && $ret->rowCount() > 0)
-                    {
-                        print("<div id=\"search_res\">");
+                    } else {
+                        \GalClash\error_message('Sorry, leere Suchanfragen werden nichg unterstützt...');
+                    }
+                    if (isset($ret) && $ret->rowCount() > 0) {
+                        print('<div id="search_res">');
                         $a = display_result($ret);
-                        print("</div>");
+                        print('</div>');
+                    } else {
+                        \GalClash\error_message('Nichts gefunden.');
+                        $a = '';
                     }
-                    else
-                    {
-                        \GalClash\error_message("Nichts gefunden.");
-                        $a = "";
-                    }
-                    if(!$request->exact)
+                    if (!$request->exact) {
                         $a = $request->allianz;
-                    put_add_form(isset($request->spieler) ? $request->spieler: "", $a);
-                    break;
-                case "einfügen":
-                    break;
-                    if(!isset($request->loeschen))
-                        neue_kolonie($request);
-                    else
-                    {
-                        if(!isset($request->force))
-                            \GalClash\error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
-                        else
-                            remove_kolonie($request);
                     }
-                    $ret = suche(TRUE, $request->spieler, TRUE);
-                    if(isset($ret) && $ret->rowCount() > 0)
+                    put_add_form(isset($request->spieler) ? $request->spieler : '', $a);
+                    break;
+                case 'einfügen':
+                    break;
+                    if (!isset($request->loeschen)) {
+                        neue_kolonie($request);
+                    } else {
+                        if (!isset($request->force)) {
+                            \GalClash\error_message('Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!');
+                        } else {
+                            remove_kolonie($request);
+                        }
+                    }
+                    $ret = suche(true, $request->spieler, true);
+                    if (isset($ret) && $ret->rowCount() > 0) {
                         display_result($ret);
+                    }
                     put_add_form($request->spieler, $request->allianz);
                     break;
                 default:
-                    \GalClash\error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
+                    \GalClash\error_message('Sorry, aber so einfach ist das System nicht zu knacken ;-)');
             }
         }
     }
@@ -262,24 +263,25 @@ namespace GalClash {
     /*
     ** Some simple message outputs
     */
-    function message($msg, $type, $close = FALSE)
+    function message($msg, $type, $close = false)
     {
         global $session;
 
         printf('<div class="alert alert-%s">', $type);
-        if($close && isset($session) && use_javascript())
+        if ($close && isset($session) && use_javascript()) {
             printf('<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>');
+        }
         printf('%s</div>', $msg);
     }
 
     function success_message($msg)
     {
-        message($msg, 'success', TRUE);
+        message($msg, 'success', true);
     }
 
     function info_message($msg)
     {
-        message($msg, 'info', TRUE);
+        message($msg, 'info', true);
     }
 
     function warning_message($msg)
@@ -296,21 +298,20 @@ namespace GalClash {
     {
         $crypted = $db->get_pwd_entry($uid);
 
-        if($_SERVER['SERVER_ADDR'] == '127.0.0.1')
-        {
+        if ($_SERVER['SERVER_ADDR'] == '127.0.0.1') {
             $info = password_get_info($crypted);
-            if($info['algo'])
-            {
-                if(password_verify($pwd, $crypted))
+            if ($info['algo']) {
+                if (password_verify($pwd, $crypted)) {
                     return (password_needs_rehash($crypted, PASSWORD_DEFAULT)) ? 2 : 1;
-                else
+                } else {
                     return 0;
-            }
-            else
+                }
+            } else {
                 return ($crypted == sha1($pwd)) ? 2 : ($crypted == '') ? 1 : 0;
-        }
-        else
+            }
+        } else {
             return ($crypted == sha1($pwd)) ? 1 : ($crypted == '') ? 1 : 0;
+        }
     }
 
     function update_passwd($db, $uid, $pwd)
@@ -318,4 +319,3 @@ namespace GalClash {
         $db->update_passwd($uid, password_hash($this->request_ob->pwd, PASSWORD_DEFAULT));
     }
 }
-?>
