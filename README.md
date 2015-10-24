@@ -1,6 +1,6 @@
 # GalClashDB
 
-![styleci.io](https://styleci.io/repos/39353422/shield)
+[![STYLECI](https://styleci.io/repos/39353422/shield)](https://styleci.io/repos/39353422/)
 
 PHP Client for a coordinate database for the MMOG GalClash.
 
