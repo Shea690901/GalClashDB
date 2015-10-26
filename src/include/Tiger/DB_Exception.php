@@ -1,23 +1,23 @@
 <?php
-namespace Tiger {
-    class DB_Exception extends \Exception {
-        const NO_ERROR            = 0;
-        const DB_INACCESSABLE     = 1;
-        const DB_EXECUTION_ERROR  = 2;
 
-        public function __construct($code, $msg = NULL, $e = NULL)
+namespace Tiger {
+    class DB_Exception extends \Exception
+    {
+        const NO_ERROR = 0;
+        const DB_INACCESSABLE = 1;
+        const DB_EXECUTION_ERROR = 2;
+
+        public function __construct($code, $msg = null, $e = null)
         {
-            if($msg === NULL)
-            {
-                switch($code)
-                {
-                    case DB_Exception::NO_ERROR:
+            if ($msg === null) {
+                switch ($code) {
+                    case self::NO_ERROR:
                         $msg = 'No error…';
                         break;
-                    case DB_Exception::DB_INACCESSABLE:
+                    case self::DB_INACCESSABLE:
                         $msg = 'Can\'t access Database!';
                         break;
-                    case DB_Exception::DB_EXECUTION_ERROR:
+                    case self::DB_EXECUTION_ERROR:
                         $msg = 'Error while executing SQL-statement!';
                         break;
                     default:
@@ -28,5 +28,3 @@ namespace Tiger {
         }
     }
 }
-
-?>

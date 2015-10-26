@@ -1,6 +1,7 @@
 <?php
+
 namespace Tiger {
-    const MinPwLength    = 10;  // minimum allowed length for password generator (should be no less than 10)
+    const MinPwLength = 10;  // minimum allowed length for password generator (should be no less than 10)
     const MinPwDefLength = 10;  // minimum length for password generator (default, must be ≥ MinPwLength)
     const MaxPwDefLength = 14;  // maximum length for password generator (default, should be ≥ MinPwDefLength)
 
@@ -17,13 +18,14 @@ namespace Tiger {
     ** at the §ame time this class allows to iterate through it's
     ** (pseudo) member-varables
     */
-    class Base implements \iterator, \Countable {
+    class Base implements \iterator, \Countable
+    {
         private $data;
         private $valid_keys;
 
-        public function __construct($vk = NULL)
+        public function __construct($vk = null)
         {
-            $this->data = array();
+            $this->data = [];
             $this->valid_keys = $vk;
         }
 
@@ -35,20 +37,18 @@ namespace Tiger {
 
         private function check_key($name)
         {
-            if($this->valid_keys !== NULL)
-            {
-                if(array_search($name, $this->valid_keys) === FALSE)
-                {
+            if ($this->valid_keys !== null) {
+                if (array_search($name, $this->valid_keys) === false) {
                     $trace = debug_backtrace();
                     trigger_error(
-                        'Undefined ' . get_called_class() . '::property: "' . $name .
-                        '" in ' . $trace[0]['file'] .
-                        ' on line ' . $trace[0]['line'],
+                        'Undefined '.get_called_class().'::property: "'.$name.
+                        '" in '.$trace[0]['file'].
+                        ' on line '.$trace[0]['line'],
                         E_USER_ERROR);
                 }
             }
         }
-        
+
         public function __set($name, $value)
         {
             $this->check_key($name);
@@ -58,20 +58,22 @@ namespace Tiger {
         public function __get($name)
         {
             $this->check_key($name);
-            if(array_key_exists($name, $this->data))
+            if (array_key_exists($name, $this->data)) {
                 return $this->data[$name];
+            }
 
             $trace = debug_backtrace();
             trigger_error(
-                'Undefined ' . get_called_class() . '::property: "' . $name .
-                '" in ' . $trace[0]['file'] .
-                ' on line ' . $trace[0]['line'],
+                'Undefined '.get_called_class().'::property: "'.$name.
+                '" in '.$trace[0]['file'].
+                ' on line '.$trace[0]['line'],
                 E_USER_ERROR);
         }
 
         public function __isset($name)
         {
             $this->check_key($name);
+
             return isset($this->data[$name]);
         }
 
@@ -89,25 +91,29 @@ namespace Tiger {
         public function current()
         {
             $var = current($this->data);
+
             return $var;
         }
 
-        public function key() 
+        public function key()
         {
             $var = key($this->data);
+
             return $var;
         }
 
-        public function next() 
+        public function next()
         {
             $var = next($this->data);
+
             return $var;
         }
 
         public function valid()
         {
             $key = key($this->data);
-            $var = (($key !== NULL) && ($key !== FALSE));
+            $var = (($key !== null) && ($key !== false));
+
             return $var;
         }
 
@@ -135,8 +141,9 @@ namespace Tiger {
     ** where the used directory name corresponds with the namespace used by
     ** either application or library
     */
-    class AutoLoader {
-        const LIBRARY     = 0;
+    class AutoLoader
+    {
+        const LIBRARY = 0;
         const APPLICATION = 1;
 
         private $name;
@@ -145,24 +152,24 @@ namespace Tiger {
         public function __construct($type, $name)
         {
             $path = $this->search_path($name);
-            if($path === FALSE)
+            if ($path === false) {
                 throw new \ErrorException(
-                        'Path for ' . ($type == self::LIBRARY ? 'library' : 'application') . ' »' . $name . '« not found!',
+                        'Path for '.($type == self::LIBRARY ? 'library' : 'application').' »'.$name.'« not found!',
                         0, 2
                         );
-            $this->path = $path . '/';
+            }
+            $this->path = $path.'/';
             $this->name = $name;
-            switch($type)
-            {
+            switch ($type) {
                 case self::LIBRARY:
-                    spl_autoload_register(array($this, 'autoload'), true, false);
+                    spl_autoload_register([$this, 'autoload'], true, false);
                     break;
                 case self::APPLICATION:
-                    spl_autoload_register(array($this, 'autoload'), true, true);
+                    spl_autoload_register([$this, 'autoload'], true, true);
                     break;
                 default:
                     throw new \ErrorException(
-                            'Unknown type »' . $type . '«!',
+                            'Unknown type »'.$type.'«!',
                             0, 2
                             );
             }
@@ -170,29 +177,31 @@ namespace Tiger {
 
         public function __destruct()
         {
-            spl_autoload_unregister(array($this, 'autoload'));
+            spl_autoload_unregister([$this, 'autoload']);
         }
 
         private function search_path($name)
         {
-            if(is_dir($ret = ($_SERVER['DOCUMENT_ROOT'] . 'include/' . $name)))
+            if (is_dir($ret = ($_SERVER['DOCUMENT_ROOT'].'include/'.$name))) {
                 return $ret;
-            else if(is_dir($ret = (dirname($_SERVER['SCRIPT_FILENAME']) . '/include/' . $name)))
+            } elseif (is_dir($ret = (dirname($_SERVER['SCRIPT_FILENAME']).'/include/'.$name))) {
                 return $ret;
-            return FALSE;
+            }
+
+            return false;
         }
 
         private function autoload($class_name)
         {
             $arr = explode('\\', $class_name);
-            if($arr[0] == $this->name)
-            {
+            if ($arr[0] == $this->name) {
                 unset($arr[0]);
-                $path = $this->path . implode($arr, '/') . '.php';
-                if(require_once $path)
+                $path = $this->path.implode($arr, '/').'.php';
+                if (require_once $path) {
                     return;
-                else
+                } else {
                     throw new Exception("Unable to load $path.");
+                }
             }
         }
     }
@@ -202,8 +211,7 @@ namespace Tiger {
     */
     function exception_error_handler($errno, $errstr, $errfile, $errline)
     {
-        if(DEBUG)
-        {
+        if (DEBUG) {
             printf("<pre>%016b & %016b = %016b\n%s\n%s\n%d\nBacktrace\n",
                     $errno, error_reporting(), $errno & error_reporting(),
                     $errstr,
@@ -211,8 +219,7 @@ namespace Tiger {
             var_dump(debug_backtrace());
             print('</pre>');
         }
-        if (!(error_reporting() & $errno))
-        {
+        if (!(error_reporting() & $errno)) {
             // This error code is not included in error_reporting
             return;
         }
@@ -235,32 +242,38 @@ namespace Tiger {
     */
     function gen_password($symbols = '', $min = MinPwDefLength, $max = MaxPwDefLength)
     {
-        if(strlen($symbols) == 0)
+        if (strlen($symbols) == 0) {
             // use either default set
-            $symbols='abcdefghijklmnopqwrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ123456789_';
-        else
+            $symbols = 'abcdefghijklmnopqwrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ123456789_';
+        } else {
             // or remove all repeated symbols
             $symbols = count_chars($symbols, 3);
-        if(($size = strlen($symbols)) < 10)
+        }
+        if (($size = strlen($symbols)) < 10) {
             // too small sets give bad passwords => forbidden
             throw new \ErrorException(sprintf('too few symbols (%s) for password generation!', $symbols));
-        if(($syms = $min) < MinPwLength)
+        }
+        if (($syms = $min) < MinPwLength) {
             // too few choosen symbols (with repeat) give bad passwords => forbidden
             throw new \ErrorException('too short password for password generation!');
+        }
 
         // we have given a minimum length greater than default (or given) maximum, minimum supersedes!
-        if($min > $max)
+        if ($min > $max) {
             $max = $min;
+        }
 
         // minimum and maximum length differ => choose random
-        if($min != $max)
+        if ($min != $max) {
             $syms = mt_rand($min, $max);
+        }
 
         // generate random array
         $size--;
-        $ret = array();
-        for($x = 0; $x < $syms; $x++)
+        $ret = [];
+        for ($x = 0; $x < $syms; $x++) {
             $ret[] = $symbols[mt_rand(0, $size)];
+        }
 
         // return as string
         return implode($ret);
@@ -269,8 +282,6 @@ namespace Tiger {
     /*
     ** install error-handler and autoloader for this library
     */
-    set_error_handler("\\Tiger\\exception_error_handler");
+    set_error_handler('\\Tiger\\exception_error_handler');
     $TigerAutoLoader = new \Tiger\AutoLoader(AutoLoader::LIBRARY, 'Tiger');
 }
-
-?>

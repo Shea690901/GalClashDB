@@ -1,34 +1,35 @@
 <?php
-namespace Tiger {
-    use \PDO;       // this is an abstraction for the PDO database object
-    use \Exception;
 
-    class DB_PDO {
+namespace Tiger {
+    use Exception;       // this is an abstraction for the PDO database object
+    use PDO;
+
+    class DB_PDO
+    {
         private $dbh;
 
-        function __construct($engine, $host, $port, $dbname, $charset, $user, $password)
+        public function __construct($engine, $host, $port, $dbname, $charset, $user, $password)
         {
-            $dsn = $engine . ':host=' . $host . ';' .
-                ($port == 0 ? '' : 'port=' . $port . ';') .
-                'dbname=' . $dbname .';charset=' . $charset;
-            if(\DEBUG)
-            {
+            $dsn = $engine.':host='.$host.';'.
+                ($port == 0 ? '' : 'port='.$port.';').
+                'dbname='.$dbname.';charset='.$charset;
+            if (\DEBUG) {
                 $this->dsn = $dsn;
                 $this->user = $user;
             }
-            $options = array(
-                PDO::ATTR_PERSISTENT => TRUE,
+            $options = [
+                PDO::ATTR_PERSISTENT         => true,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-            ); 
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            ];
             try {
                 $this->dbh = new PDO($dsn, $user, $password, $options);
-            }
-            catch(Exception $e) {
-                if(DEBUG)
+            } catch (Exception $e) {
+                if (DEBUG) {
                     throw new DB_Exception(DB_Exception::DB_INACCESSABLE, sprintf('Exception(%s) for "%s"', $e->getMessage(), $dsn));
-                else
-                    throw new DB_Exception(DB_Exception::DB_INACCESSABLE, NULL, $e);
+                } else {
+                    throw new DB_Exception(DB_Exception::DB_INACCESSABLE, null, $e);
+                }
             }
         }
 
@@ -43,5 +44,3 @@ namespace Tiger {
         }
     }
 }
-
-?>
