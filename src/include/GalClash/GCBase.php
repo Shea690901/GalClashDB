@@ -177,8 +177,8 @@ namespace {
     }
     else
     {
-        // first look if we have some message boxes to display…
-        if($request->is_valid())
+        // first look if we might have some message boxes to display…
+        if(isset($content))
         {
             $content->msg_boxes();
         }
@@ -286,6 +286,20 @@ namespace GalClash {
     function error_message($msg)
     {
         message($msg, 'danger');
+    }
+
+    function is_cyrillic($txt)
+    {
+        return (preg_match('/[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя]/', $txt) === 1);
+    }
+
+    function print_($txt)
+    {
+        if(is_cyrillish($txt))
+            $fmt = '<div lang="ru">%s</div>';
+        else
+            $fmt = '%s';
+        printf($fmt, $txt);
     }
 
     function check_password($db, $uid, $pwd)
