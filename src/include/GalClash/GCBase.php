@@ -121,14 +121,17 @@ namespace {
         // OK! then we can work
         if(isset($request->profile) || $session->c_pwd)     // user profile
         {
-            $profile = new \GalClash\GCProfile($request, $session, $db);
-            $profile->process_request($cookie); // Profile changes might change cookies
+            $content = new \GalClash\GCProfile($request, $session, $db);
         }
         else if(isset($request->admin))                     // ADMIN MODE
         {
-            $admin_page = new \GalClash\GCAdminMode($request, $session, $db);
-            $admin_page->process_request();
+            $content = new \GalClash\GCAdminMode($request, $session, $db);
         }
+        else
+        {
+            $content = new \GalClash\GCSaR($request, $session, $db);
+        }
+        $content->process_request($cookie); // Profile changes might change cookies
     }
 
     /*
@@ -175,13 +178,9 @@ namespace {
     else
     {
         // first look if we have some message boxes to display…
-        if(isset($request->profile))                        // user profile
+        if($request->is_valid())
         {
-            $profile->msg_boxes();
-        }
-        else if(isset($request->admin))                     // ADMIN MODE
-        {
-            $admin_page->msg_boxes();
+            $content->msg_boxes();
         }
 
         if(!$session->is_logged_in())                       // not logged in (anymore?)
@@ -191,15 +190,11 @@ namespace {
 
             $session->login_form();
         }
-        else if(isset($request->profile) || $session->c_pwd)    // user profile (might be first login)
+        else
         {
-            $profile->put_form();
+            $content->put_form();
         }
-        else if(isset($request->admin))                     // ADMIN MODE
-        {
-            $admin_page->put_form();
-        }
-        else                                                // normal mode
+        /*
         {
             put_search_form();
             
@@ -251,6 +246,7 @@ namespace {
                     \GalClash\error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
             }
         }
+        */
     }
 
     // that's it…

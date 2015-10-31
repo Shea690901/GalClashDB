@@ -1,60 +1,6 @@
 <?php
 namespace GalClash {
-    class GCSaR extends \Tiger\Base {
-
-        /*
-        ** __constructor
-        **
-        ** process request and prints accordingly:
-        ** - alliance overview
-        ** - admin forms
-        */
-        public function __construct(GCRequest $request, GCSession $session, GCDB $db)
-        {
-            parent::__construct();
-
-            // save for subsequent functions…
-            $this->db      = $db;
-            $this->request = $request;
-            $this->session = $session;
-
-            // first we need to know what changed, so we know what to display…
-            // ret contains a mapping with all parameters needed later on
-            $ret = $this->process_request();
-            print('<pre>');
-            var_dump($ret);
-            print('</pre>');
-
-/*
-            foreach($ret['forms'] as $form)
-            {
-                switch($form)
-                {
-                    case 'member':
-                        $this->display_member_forms($ret);
-                        unset($ret['overview']);
-                        break;
-                    case 'allies':
-                        $this->display_allies_forms($ret);
-                        unset($ret['overview']);
-                        break;
-                    default:
-                        throw new \ErrorException('Unknown formular type!');
-                        break;
-                }
-            }
-*/
-        }
-
-        /*
-        ** __destructor
-        ** prints:
-        */
-        public function __destruct()
-        {
-            parent::__destruct();
-        }
-
+    class GCSaR extends GCMode {
         /*
         ** displays search results
         */
@@ -62,7 +8,7 @@ namespace GalClash {
         {
             $session = $this->session;
             $type    = $result['s_type'];
-            $search  = $result('search'];
+            $search  = $result['search'];
 ?>
             <div id="search_result">
                 <fieldset>
@@ -70,7 +16,6 @@ namespace GalClash {
                 </fieldset>
             </div>
 <?php
-            }
         }
 
     //        $ret = 0;
@@ -89,8 +34,9 @@ namespace GalClash {
     //            default:
     //              put_admin_forms();
     //        }
-        private function process_request()
+        public function process_request($arg = NULL)
         {
+            return;
             $req = $this->request;
             $state = trim($req->state);
             print('<pre>');
@@ -165,6 +111,8 @@ $ret['forms'] = array('member', 'allies');
             }
             return $ret;
         }
+
+        public function put_form() {}
 
         private function display_general_forms($args)
         {

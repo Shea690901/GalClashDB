@@ -15,9 +15,14 @@ namespace GalClash {
             parent::__destruct();
         }
 
+        public function is_valid()
+        {
+            return $this->state != 'start';
+        }
+
         private function set_defaults()
         {
-            $this->state = "start";      /* state for statemachine */
+            $this->state = 'start';      /* state for statemachine */
         }
     }
 }
