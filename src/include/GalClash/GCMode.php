@@ -64,7 +64,7 @@ namespace GalClash {
         */
         function store_message($msg, $type, $close = FALSE)
         {
-            $this->messages[] = array('text' => $msg, 'subtype' => $type, 'close' => $close);
+            $this->messages[] = array('text' => $msg, 'type' => 'msg', 'subtype' => $type, 'close' => $close);
         }
 
         function store_success_message($msg)
