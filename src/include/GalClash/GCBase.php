@@ -194,59 +194,6 @@ namespace {
         {
             $content->put_form();
         }
-        /*
-        {
-            put_search_form();
-            
-            switch($request->state)
-            {
-                case "start":
-                    break;
-                case "suchen":
-                    if($request->spieler != "")
-                        $ret = suche(TRUE, $request->spieler, $request->exact);
-                    else if($request->allianz != "")
-                        $ret = suche(FALSE, $request->allianz, $request->exact);
-                    else if($request->galaxy != 0)
-                        $ret = overview($request->galaxy, $request->system);
-                    else
-                        \GalClash\error_message("Sorry, leere Suchanfragen werden nichg unterstützt...");
-                    if(isset($ret) && $ret->rowCount() > 0)
-                    {
-                        print("<div id=\"search_res\">");
-                        $a = display_result($ret);
-                        print("</div>");
-                    }
-                    else
-                    {
-                        \GalClash\error_message("Nichts gefunden.");
-                        $a = "";
-                    }
-                    if(!$request->exact)
-                        $a = $request->allianz;
-                    put_add_form(isset($request->spieler) ? $request->spieler: "", $a);
-                    break;
-                case "einfügen":
-                    break;
-                    if(!isset($request->loeschen))
-                        neue_kolonie($request);
-                    else
-                    {
-                        if(!isset($request->force))
-                            \GalClash\error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
-                        else
-                            remove_kolonie($request);
-                    }
-                    $ret = suche(TRUE, $request->spieler, TRUE);
-                    if(isset($ret) && $ret->rowCount() > 0)
-                        display_result($ret);
-                    put_add_form($request->spieler, $request->allianz);
-                    break;
-                default:
-                    \GalClash\error_message("Sorry, aber so einfach ist das System nicht zu knacken ;-)");
-            }
-        }
-        */
     }
 
     // that's it…

@@ -192,54 +192,6 @@ function put_add_form($spieler, $allianz)
 <?php
 }
 
-function put_search_form()
-{
-    global $request;
-
-    $ex = $request->exact;
-
-?>
-    <div id="search_form">
-        <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8"> 
-            <fieldset>
-                <legend>Spieler oder Allianz suchen / DB Übersicht</legend>
-                <table border="0" cellpadding="0" cellspacing="4">
-                    <tr>
-                        <td align="right">Spieler:</td>
-                        <td><input name="spieler" type="text" size="20" maxlength="20" /></td>
-                        <td align="right">ähnliche Suche:</td>
-                        <td><input name="exact" type="radio" value="0" <?php print($ex ? "" : "checked=\"checked\""); ?> /></td>
-                    </tr>
-                    <tr>
-                        <td align="right">Allianz ('-' für keine):</td>
-                        <td><input name="allianz" type="text" size="20" maxlength="20" /></td>
-                        <td align="right">exakte Suche:</td>
-                        <td><input name="exact" type="radio" value="1" <?php print($ex ? "checked=\"checked\"" : ""); ?> /></td>
-                    </tr>
-                    <tr><td>&nbsp;</td></tr>
-                    <tr>
-                        <table border="0" cellpadding="0" cellspacing="4">
-                            <tr>
-                                <td></td>
-                                <td>Galaxie</td>
-                                <td>System</td>
-                            </tr>
-                            <tr>
-                                <td align="right">Übersicht</td>
-                                <td align="center"><input name="galaxy" type="text" size="2" maxlength="2" /></td>
-                                <td align="center"><input name="system" type="text" size="3" maxlength="3" /></td>
-                            </tr>
-                        </table>
-                    </tr>
-                </table>
-                <input type="submit" value="Suchen" /><input type="reset" value="Abbrechen" />
-                <input name="state" type="hidden" value="suchen" />
-            </fieldset>
-        </form>
-    </div>
-<?php
-}
-
 function overview($gal, $sys)
 {
     global $db;
@@ -268,87 +220,7 @@ function overview($gal, $sys)
         \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
         return NULL;
     }
-    return $sth;
-}
-
-function suche($spieler, $name, $exact)
-{
-    global $db;
-
-    $dbh = $db->get_handle();
-    if($exact)
-    {
-        $sth = $dbh->prepare(
-                "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
-                ($spieler ? "name" : "allianz") .
-                " = ? ORDER BY allianz, name, gal, sys, pla"
-                );
-    }
-    else
-    {
-        $name = "%" . $name . "%";
-        $sth = $dbh->prepare(
-                "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
-                ($spieler ? "name" : "allianz") .
-                " LIKE ? ORDER BY allianz, name, gal, sys, pla"
-                );
-    }
-    try {
-        $sth->execute(array($name));
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        return NULL;
-    }
-    return $sth;
-}
-
-function display_result($sth)
-{
-    $result = $sth->fetchAll(PDO::FETCH_OBJ);
-    $spieler="";
-    $allianz="";
-    if(!isset($result))
-    {
-        return "";
-    }
-    else
-    {
-?>
-    <table border="1" rules="all">
-        <colgroup span="5"></colgroup>
-        <thead>
-            <tr>
-                <th rowspan="2">Allianz</th>
-                <th rowspan="2">Spieler</th>
-                <th colspan="3">Kolonien</th>
-            </tr>
-            <tr>
-                <th>Galaxie</th>
-                <th>System</th>
-                <th>Planet</th>
-            </tr>
-        </thead>
-        <tbody>
-<?php
-        foreach($result as $row)
-        {
-?>
-            <tr>
-                <td><?php print($allianz != $row->allianz ? $allianz = $row->allianz : ""); $allianz = $row->allianz; ?></td>
-                <td><?php print($spieler != $row->name ? $row->name : ""); $spieler = $row->name; ?></td>
-                <td align="center"><?php print($row->gal); ?></td>
-                <td align="center"><?php print($row->sys); ?></td>
-                <td align="center"><?php print($row->pla); ?></td>
-            </tr>
-<?php
-        }
-?>
-        </tbody>
-    </table>
-<?php
-    }
-    return $allianz;
+    return $sth->fetchAll(PDO::FETCH_OBJ);
 }
 
 function add_coords($dbh, $gal, $sys, $pla, $s_id)
