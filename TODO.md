@@ -10,7 +10,6 @@ bug fixes:
 	- check crossreferences like is_user
 
 new features:
-- reset user passwords
 - timestamps and editor for first entries
 - history for name changes and deletes
 - better overview when renaming player/alliance

@@ -139,7 +139,7 @@ namespace GalClash {
                     }
                     if($user_info && check_password($db, ($u_id = $user_info['uid']), $opwd))
                     {
-                        $db->update_passwd($u_id, password_hash($this->req->npwd1, PASSWORD_DEFAULT));
+                        $db->update_passwd($u_id, password_hash($this->req->npwd1, PASSWORD_DEFAULT), FALSE);
                         $this->store_success_message('Passwort erfolgreich gewechselt…');
                     }
                     else

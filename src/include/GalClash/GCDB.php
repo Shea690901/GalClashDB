@@ -129,13 +129,14 @@ namespace GalClash {
             return $row ? $row->pwd : FALSE;
         }
 
-        public function update_passwd($uid, $pwd)
+        public function update_passwd($uid, $pwd, $c_pwd)
         {
             $dbh  = $this->get_handle();
-            $sth = $dbh->prepare('UPDATE `user_pwd` SET `pwd` = :pwd WHERE `m_id` = :uid');
+            $sth = $dbh->prepare('UPDATE `user_pwd` SET `pwd` = :pwd, `c_pwd` = :c_pwd WHERE `m_id` = :uid');
             try {
                 $sth->bindParam(':uid', $uid);
                 $sth->bindParam(':pwd', $pwd);
+                $sth->bindValue(':c_pwd', ($c_pwd ? 1 : 0), PDO::PARAM_INT);
                 $sth->execute();
             }
             catch(Exception $e) {
@@ -855,6 +856,40 @@ namespace GalClash {
             }
             try {
                 $sth->execute(array($name));
+            }
+            catch(\Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+            return $sth->fetchAll(PDO::FETCH_OBJ);
+        }
+
+        public function gal_sys_overview($gal, $sys = 0)
+        {
+            $dbh = $this->get_handle();
+            if($sys == 0)
+            {
+                $sth = $dbh->prepare(
+                        "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                        "gal = ? ORDER BY gal, sys, pla"
+                        );
+                $arg = array($gal);
+            }
+            else
+            {
+                $sth = $dbh->prepare(
+                        "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                        "gal = ? AND sys = ? ORDER BY gal, sys, pla"
+                        );
+                $arg = array($gal, $sys);
+            }
+            try {
+                $sth->execute($arg);
             }
             catch(\Exception $e) {
                 if(\DEBUG)

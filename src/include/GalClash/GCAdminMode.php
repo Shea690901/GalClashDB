@@ -167,6 +167,7 @@ namespace GalClash {
 ?>
                     </select>
                     <input type="submit" name="overview" value="Auswahl" />
+                    <input type="hidden" name="d_ally" value="<?php print($ally); ?>" />
                 </fieldset>
             </div>
 <?php
@@ -255,7 +256,10 @@ namespace GalClash {
             if($ally != '-')
             {
 ?>
-                <p>Kann auch benutzt werden um nebenstehend ausgewählte User einer neuen Allianz zuzuweisen!</p>
+                <p>
+                Kann auch benutzt werden um nebenstehend ausgewählte User einer neuen Allianz zuzuweisen!<br />
+                Oder, mit nur einem ausgewählten User unter Beibehaltung der Allianzmitgliedschaft, um ein neues Passwort zu vergeben.
+                </p>
 <?php
             }
 ?>
@@ -387,12 +391,17 @@ namespace GalClash {
                 $ally = trim($req->am_ally);
                 $ret['ally'] = $ally;
                 $ret['forms'] = array('member', 'allies');
+                $pwd = trim($req->pwd);
                 if(($req->ally != '-') && (isset($req->names)))
-                    $this->move_users($ally, $req->names);
+                {
+                    if((sizeof($req->names) == 1) && ($req->d_ally == $req->ally))
+                        $this->set_pwd($req->names[0], $pwd);
+                    else
+                        $this->move_users($ally, $req->names);
+                }
                 else
                 {
                     $name = trim($req->name);
-                    $pwd = trim($req->pwd);
                     $this->add_user($ally, $name, $pwd);
                 }
             }
@@ -596,6 +605,26 @@ namespace GalClash {
                     $this->store_message(sprintf('Initiales Passwort für %s lautet:<br />%s', $name, $pwd), 'info');
                 else
                     $this->store_info_message('Altes Passwort wurde beibehalten…');
+            }
+            catch(Exception $e) {
+                $this->store_error_message($e->getMessage());
+            }
+        }
+
+        private function set_pwd($name, $pwd)
+        {
+            if(strlen($pwd) == 0)
+                $pwd = \Tiger\gen_password();
+            $c_pwd = password_hash($pwd, PASSWORD_DEFAULT);
+            try {
+                $uid = $this->db->get_user_id($name);
+                if($uid != -1)
+                {
+                    $this->db->update_passwd($uid, $c_pwd, TRUE);
+                    $this->store_message(sprintf('Neues Passwort für %s lautet:<br />%s', $name, $pwd), 'info');
+                }
+                else
+                    $this->store_error_message(sprintf('User %s nicht gefunden!', $name));
             }
             catch(Exception $e) {
                 $this->store_error_message($e->getMessage());
