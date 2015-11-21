@@ -178,7 +178,7 @@ namespace GalClash {
                 $sth->bindValue(":name", $user);
                 $sth->execute();
             }
-            catch(PDOException $e) {
+            catch(Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -789,7 +789,7 @@ namespace GalClash {
                 $sth->bindValue(":u_id", $info['uid'], PDO::PARAM_INT);
                 $sth->execute();
             }
-            catch(PDOException $e) {
+            catch(Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -818,7 +818,7 @@ namespace GalClash {
                 $sth->bindValue(":u_id", $info['uid'], PDO::PARAM_INT);
                 $sth->execute();
             }
-            catch(PDOException $e) {
+            catch(Exception $e) {
                 if(\DEBUG)
                 {
                     $ei = $sth->errorInfo();
@@ -828,6 +828,44 @@ namespace GalClash {
                     throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
             }
             return;
+        }
+
+        /*
+        ** general functions for searching/adding/changing colonies
+        */
+        public function search_colony($name, $search_player = TRUE, $exact = FALSE)
+        {
+            $dbh = $this->get_handle();
+            if($exact)
+            {
+                $sth = $dbh->prepare(
+                        "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                        ($search_player ? "name" : "allianz") .
+                        " = ? ORDER BY allianz, name, gal, sys, pla"
+                        );
+            }
+            else
+            {
+                $name = "%" . $name . "%";
+                $sth = $dbh->prepare(
+                        "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
+                        ($search_player ? "name" : "allianz") .
+                        " LIKE ? ORDER BY allianz, name, gal, sys, pla"
+                        );
+            }
+            try {
+                $sth->execute(array($name));
+            }
+            catch(\Exception $e) {
+                if(\DEBUG)
+                {
+                    $ei = $sth->errorInfo();
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage(%s/%s/%s): '%s'", __FUNCTION__, $ei[0], $ei[1], $ei[2], $e->getMessage()));
+                }
+                else
+                    throw new \Tiger\DB_Exception(\Tiger\DB_Exception::DB_EXECUTION_ERROR, sprintf("%s:\nFehler bei Datenbankabfrage: '%d'<br />\n", __FUNCTION__, $e->getCode()));
+            }
+            return $sth->fetchAll(PDO::FETCH_OBJ);
         }
 
     } // class GCDB
