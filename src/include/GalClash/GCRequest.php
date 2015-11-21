@@ -22,7 +22,8 @@ namespace GalClash {
 
         private function set_defaults()
         {
-            $this->state = 'start';      /* state for statemachine */
+            $this->state = 'start';     // state for statemachine
+            $this->exact = FALSE;       // per default we're searching via sql-LIKE
         }
     }
 }
