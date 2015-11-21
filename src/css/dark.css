@@ -8,6 +8,11 @@ input {
     color:yellow;
 }
 
+input[disabled] {
+    background-color:gray;
+    color:olive;
+}
+
 select {
     background-color:black;
     color:yellow;
