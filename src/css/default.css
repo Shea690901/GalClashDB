@@ -301,7 +301,7 @@ td, th {
 /* Ausgaben */
 
 #search_res {                       /* gefundene kolonien */
-    width:40%;
+    width:50%;
     border:solid thin red;
 }
 
