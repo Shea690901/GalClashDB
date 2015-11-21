@@ -192,37 +192,6 @@ function put_add_form($spieler, $allianz)
 <?php
 }
 
-function overview($gal, $sys)
-{
-    global $db;
-
-    $dbh = $db->get_handle();
-    if($sys == 0)
-    {
-        $sth = $dbh->prepare(
-                "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
-                "gal = ? ORDER BY gal, sys, pla"
-                );
-        $arg = array($gal);
-    }
-    else
-    {
-        $sth = $dbh->prepare(
-                "SELECT name, allianz, gal, sys, pla FROM V_spieler WHERE " .
-                "gal = ? AND sys = ? ORDER BY gal, sys, pla"
-                );
-        $arg = array($gal, $sys);
-    }
-    try {
-        $sth->execute($arg);
-    }
-    catch(PDOException $e) {
-        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
-        return NULL;
-    }
-    return $sth->fetchAll(PDO::FETCH_OBJ);
-}
-
 function add_coords($dbh, $gal, $sys, $pla, $s_id)
 {
     $sth = $dbh->prepare("INSERT INTO coords (gal, sys, pla, s_id) VALUES (:gal, :sys, :pla, :s_id )");
