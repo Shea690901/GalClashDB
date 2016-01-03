@@ -903,6 +903,46 @@ namespace GalClash {
             return $sth->fetchAll(PDO::FETCH_OBJ);
         }
 
+        public function del_colony($gal, $sys, $pla)
+        {
+            $sth = $dbh->prepare("SELECT * FROM V_spieler WHERE gal = :gal AND sys = :sys AND pla = :pla");   /* kolonie vorhanden? */
+
+            try {
+                $sth->bindValue(":gal", $gal, PDO::PARAM_INT);
+                $sth->bindValue(":sys", $sys, PDO::PARAM_INT);
+                $sth->bindValue(":pla", $pla, PDO::PARAM_INT);
+                $sth->execute();
+            }
+            catch(PDOException $e) {
+                throw(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                return;
+            }
+            if($sth->rowCount() == 1)
+            {
+                $row = $sth->fetch(PDO::FETCH_OBJ);
+                if(($row->name == $spieler) && ($row->allianz == $allianz))     /* gefunden */
+                {
+                    $sth1 = $dbh->prepare("DELETE FROM coords WHERE gal = :gal AND sys = :sys AND pla = :pla");
+                    try {
+                        $sth1->bindValue(":gal", $gal, PDO::PARAM_INT);
+                        $sth1->bindValue(":sys", $sys, PDO::PARAM_INT);
+                        $sth1->bindValue(":pla", $pla, PDO::PARAM_INT);
+                        $sth1->execute();
+                    }
+                    catch(PDOException $e) {
+                        \GalClash\error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                        return;
+                    }
+                }
+                else                                                                /* aber anderer Besitzer */
+                {
+                    \GalClash\error_message("Kolonie ist für anderen Spieler / andere Allianz eingetragen! Bitte vor dem Löschen überprüfen!");
+                    $sth->execute();
+                    display_result($sth);
+                    printf("<hr />");
+                }
+            }
+        }
     } // class GCDB
 } // namespace GalClash
 ?>

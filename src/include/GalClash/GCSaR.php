@@ -10,7 +10,6 @@ namespace GalClash {
         public function put_form()
         {
             $ret = $this->ret;
-            print('<pre>');var_dump($ret);print('</pre>');
 
             if(isset($ret['forms']))
             {
@@ -42,7 +41,6 @@ namespace GalClash {
         {
             $req = $this->req;
             $ex = isset($req->exact) ? (bool) $req->exact : FALSE;
-            print('<pre>');var_dump($ex, $_POST);print('</pre>');
 ?>
     <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8" class="rcontainer "> 
 <?php
@@ -50,7 +48,7 @@ namespace GalClash {
             if(isset($args['result']))
             {
                 print("<div id=\"search_res\">");
-                $a = $this->display_result($args['result']);
+                $a = $this->display_result($args['result'], isset($args['history']));
                 print("</div>");
             }
 
@@ -92,12 +90,70 @@ namespace GalClash {
                                 </table>
                             </tr>
                         </table>
-                        <input type="submit" value="Suchen" /><input type="reset" value="Abbrechen" />
-                        <input name="state" type="hidden" value="search" />
-                        <input name="search" type="hidden" value="1" />
+                        <input type="submit" name="search" value="Suchen" /><input type="reset" value="Abbrechen" />
                     </fieldset>
+<?php
+            if($this->ses->is_admin() && isset($args["del"]))
+            {
+?>
+                    <fieldset>
+                        <legend>Kolonien löschen</legend>
+                        <p>
+                        Löscht die selektierten Kolonien.<br />
+                        Zur Sicherheit ist die weiter unten befindliche Sicherheitsabfrage zu bejahen!
+                        </p>
+                        <input type="submit" name="del_colonies" value="Löschen" />
+                        <input name="save_player" type="hidden" value="<?php print($req->player);?>" />
+                        <input name="save_ally" type="hidden" value="<?php print($req->ally);?>" />
+                        <input name="save_exact" type="hidden" value="<?php print($req->exact);?>" />
+                        <input name="save_galaxy" type="hidden" value="<?php print($req->galaxy);?>" />
+                        <input name="save_system" type="hidden" value="<?php print($req->system);?>" />
+                        <input name="search" type="hidden" value="TRUE" />
+                    </fieldset>
+                    <input type="checkbox" name="del_security" value="1">Wollen sie die markierten Kolonien wirklich löschen?
+<?php
+            }
+?>
                 </div>
+                <input name="state" type="hidden" value="work" />
             </form>
+<?php
+        }
+
+        private function display_general_forms($args)
+        {
+?>
+    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8" class="rcontainer "> 
+        <div id="admin_allies_forms">
+            <fieldset>
+                <legend>Name ändern</legend>
+                <table border="0" cellpadding="0" cellspacing="4">
+                    <tr>
+                        <td align="right"><label for="oname">alter Name:</label></td>
+                        <td><input name="oname" id="oname" type="text" size="20" maxlength="20" /></td>
+                    </tr>
+                    <tr>
+                        <td align="right"><label for="nname">neuer Name:</label></td>
+                        <td><input name="nname" id="nname" type="text" size="20" maxlength="20" /></td>
+                    </tr>
+                    <tr>
+                        <td align="right"><label for="c_player">Spielername:</label></td>
+                        <td><input type="radio" name="c_type" id="c_player" value="player" /></td>
+                    </tr>
+                    <tr>
+                        <td align="right"><label for="c_player">Allianzname:</label></td>
+                        <td><input type="radio" name="c_type" id="c_player" value="ally" /></td>
+                    </tr>
+                </table>
+                <input type="submit" name="c_name" value="Ändern" />
+                <input type="hidden" name="n_name" value="1" />
+                <input type="hidden" name="admin" value="1" />
+                <input type="hidden" name="force" value="0" />
+                <input type="hidden" name="ally" value="<?php print($args['ally']); ?>" />
+                <input type="hidden" name="state" value="work" />
+            </fieldset>
+        </div>
+    </form>
 <?php
         }
 
@@ -105,7 +161,7 @@ namespace GalClash {
         ** displays search results
         */
 
-        private function display_result($result)
+        private function display_result($result, $hist)
         {
             $player = "";
             $ally   = "";
@@ -116,6 +172,7 @@ namespace GalClash {
             }
             else
             {
+                $adm = $this->ses->is_admin();
         ?>
             <table border="1" rules="all">
                 <colgroup span="6"></colgroup>
@@ -138,12 +195,29 @@ namespace GalClash {
                 {
         ?>
                     <tr>
-                        <td><?php print($ally != $row->allianz ? $ally = $row->allianz : ""); $ally = $row->allianz; ?></td>
-                        <td><?php print($player != $row->name ? $row->name : ""); $player = $row->name; ?></td>
+                        <td>
+<?php
+                    if($hist && ($ally != $row->allianz))
+                    {
+                            print('<input name="hist" type="radio" value="A' . $row->allianz .'">');
+                    }
+                    print($ally != $row->allianz ? $ally = $row->allianz : "");
+?>
+                        </td>
+                        <td>
+<?php
+                    if($hist && ($player != $row->name))
+                    {
+                            print('<input name="hist" type="radio" value="P' . $row->name .'">');
+                    }
+                    print($player != $row->name ? $player = $row->name : "");
+?>
+                        </td>
                         <td align="center"><?php print($row->gal); ?></td>
                         <td align="center"><?php print($row->sys); ?></td>
                         <td align="center"><?php print($row->pla); ?></td>
-                        <td><input type="checkbox" name="col_mark[]" value="<?php printf('%d:%d:%d', $row->gal, $row->sys, $row->pla); ?>" /></td>
+                        <td><input type="checkbox" name="col_mark[]" value="<?php printf("%d:%d:%d", $row->gal, $row->sys, $row->pla); ?>"
+                         <?php print($adm ? '' : 'disabled="disabled"'); ?> /></td>
                     </tr>
         <?php
                 }
@@ -188,93 +262,71 @@ namespace GalClash {
             }
 
             // now begins the work
-            else
+            elseif($state == 'work')
             {
-                switch($req->state)
+                $ret    = array('forms' => array('search'), 'history' => TRUE);
+                $player = $req->player;
+                $ally   = $req->ally;
+                $exact  = $req->exact;
+                $galaxy = $req->galaxy;
+                $system = $req->system;
+                if(isset($req->del_colonies))
                 {
-                    case "search":
-                        $ret = array('forms' => array('search'));
-                        if($req->player != "")
-                            $result = $this->search($req->player, TRUE, $req->exact);
-                        else if($req->ally != "")
-                            $result = $this->search($req->ally, FALSE, $req->exact);
-                        else if($req->galaxy != 0)
-                            $result = overview($req->galaxy, $req->system);
-                        else
-                            $this->store_error_message("Sorry, leere Suchanfragen werden nicht unterstützt...");
-                        if(isset($result))
+                    if(!isset($req->force))
+                        $this->store_error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
+                    else
+                    {
+                        foreach($req->col_mark as $col)
                         {
-                            $ret['result'] = $result;
+                            $this->remove_kolonie($col);
                         }
-                        if(!$req->exact)
-                        {
-                            $a = $req->ally;
-                        }
-                        else
-                        {
-                            $a = "";
-                        }
-                        put_add_form(isset($req->spieler) ? $req->spieler: "", $a);
-                        break;
-                    case "einfügen":
-                        break;
-                        if(!isset($req->loeschen))
-                            neue_kolonie($req);
-                        else
-                        {
-                            if(!isset($req->force))
-                                \GalClash\error_message("Sicherheitsfrage nicht gesetzt! Kolonie wird nicht gelöscht!");
-                            else
-                                remove_kolonie($req);
-                        }
-                        $ret = suche(TRUE, $req->spieler, TRUE);
-                        if(isset($ret) && $ret->rowCount() > 0)
-                            display_result($ret);
-                        put_add_form($request->spieler, $request->allianz);
-                        break;
-                    default:
-                        \GalClash\error_message("Sorry, aber soo einfach ist das System nicht zu knacken ;-)");
+                    }
+                    $player = $req->save_player;
+                    $ally   = $req->save_ally;
+                    $exact  = $req->save_exact;
+                    $galaxy = $req->save_galaxy;
+                    $system = $req->save_system;
                 }
+                elseif(isset($req->add_colony))
+                {
+                    neue_kolonie($req);
+                }
+                if(isset($req->search))
+                {
+                    if($player != "")
+                        $result = $this->search($player, TRUE, $exact);
+                    else if($ally != "")
+                        $result = $this->search($ally, FALSE, $exact);
+                    else if($galaxy != 0)
+                        $result = $this->overview($galaxy, $system);
+                    else
+                        $this->store_error_message("Sorry, leere Suchanfragen werden nicht unterstützt...");
+                    if(isset($result))
+                    {
+                        $ret['result'] = $result;
+                        if(sizeof($result))
+                            $ret['del'] = TRUE;
+                    }
+                    if(!$req->exact)
+                    {
+                        $a = $req->ally;
+                    }
+                    else
+                    {
+                        $a = "";
+                    }
+                    put_add_form(isset($req->spieler) ? $req->spieler: "", $a);
+                }
+                /*
+                $ret = suche(TRUE, $req->spieler, TRUE);
+                if(isset($ret) && $ret->rowCount() > 0)
+                    display_result($ret);
+                put_add_form($request->spieler, $request->allianz);
+                 */
+                else
+                    $this->store_error_message("Sorry, aber soo einfach ist das System nicht zu knacken ;-)");
             }
-
             return $ret;
-        }
-
-        private function display_general_forms($args)
-        {
-?>
-    <form action="<?php print($_SERVER["PHP_SELF"]); ?>" method="post" accept-charset="utf-8" class="rcontainer "> 
-        <div id="admin_allies_forms">
-            <fieldset>
-                <legend>Name ändern</legend>
-                <table border="0" cellpadding="0" cellspacing="4">
-                    <tr>
-                        <td align="right"><label for="oname">alter Name:</label></td>
-                        <td><input name="oname" id="oname" type="text" size="20" maxlength="20" /></td>
-                    </tr>
-                    <tr>
-                        <td align="right"><label for="nname">neuer Name:</label></td>
-                        <td><input name="nname" id="nname" type="text" size="20" maxlength="20" /></td>
-                    </tr>
-                    <tr>
-                        <td align="right"><label for="c_player">Spielername:</label></td>
-                        <td><input type="radio" name="c_type" id="c_player" value="player" /></td>
-                    </tr>
-                    <tr>
-                        <td align="right"><label for="c_player">Allianzname:</label></td>
-                        <td><input type="radio" name="c_type" id="c_player" value="ally" /></td>
-                    </tr>
-                </table>
-                <input type="submit" name="c_name" value="Ändern" />
-                <input type="hidden" name="n_name" value="1" />
-                <input type="hidden" name="admin" value="1" />
-                <input type="hidden" name="force" value="0" />
-                <input type="hidden" name="ally" value="<?php print($args['ally']); ?>" />
-                <input type="hidden" name="state" value="work" />
-            </fieldset>
-        </div>
-    </form>
-<?php
         }
 
         private function search($name, $search_player, $exact_search)
@@ -287,6 +339,28 @@ namespace GalClash {
                 $this->store_error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
                 return NULL;
             }
+        }
+
+        private function overview($gal, $sys)
+        {
+            $db = $this->db;
+            try {
+                return $db->gal_sys_overview($gal, $sys);
+            }
+            catch(Exception $e) {
+                $this->store_error_message(sprintf("Fehler bei Datenbankabfrage: '%s'<br />\n", $e->getMessage()));
+                return NULL;
+            }
+        }
+
+        private function remove_kolonie($arg)
+        {
+            $db  = $this->db;
+            $arr = explode($arg, ":");
+
+                return;
+            }
+            \GalClash\error_message("Kolonie nicht gefunden!");
         }
     }
 }
